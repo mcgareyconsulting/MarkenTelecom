@@ -12,6 +12,8 @@ from reportlab.platypus import (
 from reportlab.lib.units import inch
 from datetime import datetime
 import os
+from PIL import Image as PILImage
+import io
 
 
 class ViolationNoticePDF:
@@ -132,6 +134,122 @@ class ViolationNoticePDF:
             )
         )
 
+    def _format_date(self, date_value):
+        """
+        Convert various date formats to a string.
+        Handles datetime objects, pandas Timestamps, and strings.
+
+        Args:
+            date_value: A date in various possible formats
+
+        Returns:
+            str: Formatted date string
+        """
+        if isinstance(date_value, str):
+            return date_value
+
+        # Handle pandas Timestamp or datetime
+        if hasattr(date_value, "strftime"):
+            # Format as "DD-MMM" (e.g., "26-May")
+            return date_value.strftime("%d-%b")
+
+        # If it's some other type, convert to string
+        return str(date_value)
+
+    def _process_image_with_exif(
+        self, image_path, max_width=5.5 * inch, max_height=4 * inch
+    ):
+        """
+        Process an image with EXIF orientation data and return properly oriented image data
+        with appropriate dimensions for the PDF.
+
+        Args:
+            image_path: Path to the image file
+            max_width: Maximum width for the image in the PDF
+            max_height: Maximum height for the image in the PDF
+
+        Returns:
+            tuple: (image_data, width, height) where image_data is bytes and width/height are in points
+        """
+        try:
+            # Open the image and apply EXIF orientation
+            with PILImage.open(image_path) as img:
+                # Check if the image has EXIF data
+                exif = None
+                if hasattr(img, "_getexif") and img._getexif() is not None:
+                    exif = dict(img._getexif().items())
+
+                # Apply orientation based on EXIF data if available
+                if exif and 274 in exif:  # 274 is the EXIF orientation tag
+                    orientation = exif[274]
+
+                    # Apply rotation based on orientation
+                    if orientation == 2:
+                        img = img.transpose(PILImage.FLIP_LEFT_RIGHT)
+                    elif orientation == 3:
+                        img = img.rotate(180, expand=True)
+                    elif orientation == 4:
+                        img = img.rotate(180, expand=True).transpose(
+                            PILImage.FLIP_LEFT_RIGHT
+                        )
+                    elif orientation == 5:
+                        img = img.rotate(-90, expand=True).transpose(
+                            PILImage.FLIP_LEFT_RIGHT
+                        )
+                    elif orientation == 6:
+                        img = img.rotate(-90, expand=True)
+                    elif orientation == 7:
+                        img = img.rotate(90, expand=True).transpose(
+                            PILImage.FLIP_LEFT_RIGHT
+                        )
+                    elif orientation == 8:
+                        img = img.rotate(90, expand=True)
+
+                # Force portrait orientation for mobile photos if height > width
+                img_width, img_height = img.size
+                if img_height > img_width:
+                    # Already in portrait orientation, no need to rotate
+                    pass
+
+                # Calculate aspect ratio
+                aspect_ratio = img_width / img_height
+
+                # Determine if image is portrait or landscape after any rotation
+                is_portrait = img_height > img_width
+
+                if is_portrait:
+                    # For portrait images, limit height and calculate width
+                    # Use a smaller max_height for portrait to avoid excessive page usage
+                    portrait_max_height = 3.5 * inch
+                    new_height = min(portrait_max_height, max_height)
+                    new_width = new_height * aspect_ratio
+
+                    # If width is still too large, scale down further
+                    if new_width > max_width:
+                        new_width = max_width
+                        new_height = new_width / aspect_ratio
+                else:
+                    # For landscape images, limit width and calculate height
+                    new_width = min(max_width, max_width)
+                    new_height = new_width / aspect_ratio
+
+                    # If height is still too large, scale down further
+                    if new_height > max_height:
+                        new_height = max_height
+                        new_width = new_height * aspect_ratio
+
+                # Save the processed image to a bytes buffer
+                img_buffer = io.BytesIO()
+                img.save(img_buffer, format=img.format or "JPEG")
+                img_data = img_buffer.getvalue()
+
+                return img_data, new_width, new_height
+
+        except Exception as e:
+            # If there's an error processing the image, return the original path and default dimensions
+            print(f"Error processing image with EXIF: {e}")
+            return None, max_width, max_height
+
     def generate_pdf(self, data):
         """
         Generate a PDF violation notice using the provided data.
@@ -143,12 +261,12 @@ class ViolationNoticePDF:
                 - district_address_line1: First line of district address
                 - district_address_line2: Second line of district address
                 - district_phone: District phone number
-                - notice_date: Date of the notice
+                - notice_date: Date of the notice (can be string, datetime, or pandas Timestamp)
                 - homeowner_name: Full name of the homeowner
                 - homeowner_address_line1: First line of homeowner address
-                - homeowner_address_line2: City, state, zip of homeowner
-                - homeowner_email: Email address of homeowner
-                - homeowner_salutation: Salutation for the letter (e.g., "Mr. Smith")
+                - homeowner_address_line2: City, state, zip of homeowner (optional)
+                - homeowner_email: Email address of homeowner (optional)
+                - homeowner_salutation: Salutation for the letter (optional)
                 - property_address: Address of the property in violation
                 - violation_type: Type of violation
                 - violation_image_path: Path to the image showing the violation
@@ -169,9 +287,6 @@ class ViolationNoticePDF:
             "notice_date",
             "homeowner_name",
             "homeowner_address_line1",
-            # "homeowner_address_line2",
-            # "homeowner_email",
-            # "homeowner_salutation",
             "property_address",
             "violation_type",
             "violation_image_path",
@@ -219,22 +334,28 @@ class ViolationNoticePDF:
         # Notice title
         content.append(Paragraph("Courtesy Notice", self.styles["NoticeTitle"]))
 
-        # Date
-        content.append(Paragraph(data["notice_date"], self.styles["Date"]))
+        # Format the date to ensure it's a string
+        formatted_date = self._format_date(data["notice_date"])
+        content.append(Paragraph(formatted_date, self.styles["Date"]))
 
         # Recipient information
         recipient_info = f"""{data['homeowner_name']}<br/>
-                          {data['homeowner_address_line1']}<br/>"""
-        # {data['homeowner_address_line2']}"""
+                          {data['homeowner_address_line1']}"""
+
+        # Add second address line if available
+        if "homeowner_address_line2" in data and data["homeowner_address_line2"]:
+            recipient_info += f"<br/>{data['homeowner_address_line2']}"
+
         content.append(Paragraph(recipient_info, self.styles["Recipient"]))
 
-        # Email
-        # content.append(
-        #     Paragraph(
-        #         f"Sent Via Email: {data['homeowner_email']}",
-        #         self.styles["PropertyInfo"],
-        #     )
-        # )
+        # Email if available
+        if "homeowner_email" in data and data["homeowner_email"]:
+            content.append(
+                Paragraph(
+                    f"Sent Via Email: {data['homeowner_email']}",
+                    self.styles["PropertyInfo"],
+                )
+            )
 
         # Property and violation information
         content.append(
@@ -248,10 +369,13 @@ class ViolationNoticePDF:
             )
         )
 
-        # Salutation
-        # content.append(
-        #     Paragraph(f"Dear: {data['homeowner_salutation']},", self.styles["Content"])
-        # )
+        # Salutation if available
+        if "homeowner_salutation" in data and data["homeowner_salutation"]:
+            content.append(
+                Paragraph(
+                    f"Dear: {data['homeowner_salutation']},", self.styles["Content"]
+                )
+            )
 
         # Letter content
         letter_content = f"""One of the primary responsibilities of {data['district_name']} ("the District") is to protect the aesthetic appeal and property values
@@ -277,9 +401,25 @@ class ViolationNoticePDF:
             )
         )
 
-        # Add violation image
+        # Add violation image with EXIF orientation handling
         if os.path.exists(data["violation_image_path"]):
-            img = Image(data["violation_image_path"], width=4 * inch, height=6 * inch)
+            # Process the image with EXIF orientation
+            img_data, img_width, img_height = self._process_image_with_exif(
+                data["violation_image_path"]
+            )
+
+            if img_data:
+                # Create the image from processed data
+                img = Image(io.BytesIO(img_data), width=img_width, height=img_height)
+            else:
+                # Fallback to original path if processing failed
+                img = Image(
+                    data["violation_image_path"], width=img_width, height=img_height
+                )
+
+            # Center the image
+            img.hAlign = "CENTER"
+
             content.append(img)
             content.append(Paragraph("Violation Image", self.styles["ImageCaption"]))
 
@@ -311,7 +451,7 @@ def test_template():
         "district_address_line1": "c/o Public Alliance LLC",
         "district_address_line2": "7555 E. Hampden Ave., Suite 501",
         "district_phone": "(720) 213-6621",
-        "notice_date": "May 24, 2025",
+        "notice_date": "20-May",
         "homeowner_name": "Mr. John Doe",
         "homeowner_address_line1": "123 Sample Street",
         "homeowner_address_line2": "Anytown, CO 80000",
