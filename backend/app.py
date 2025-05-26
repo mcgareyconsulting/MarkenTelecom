@@ -3,6 +3,7 @@ import pandas as pd
 import re
 import os
 from flask_cors import CORS
+from letter_generation import generate_pdfs
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -87,6 +88,17 @@ def autocomplete():
     except Exception as e:
         print(f"Error processing request: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+
+
+def generate_violation_notices(district, date):
+    """
+    Generate violation noticies for addresses in district and on a specific date.
+    """
+
+    # Query database for violations: district and date
+
+    # Build data package for PDF generation
+    generate_pdfs()
 
 
 @app.route("/api/health", methods=["GET"])

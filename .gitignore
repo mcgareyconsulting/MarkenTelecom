@@ -2,6 +2,7 @@
 .DS_Store
 .xlsx
 images/
+backend/pdf_generator/output
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
