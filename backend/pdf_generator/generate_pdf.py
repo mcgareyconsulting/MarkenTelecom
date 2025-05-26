@@ -1,5 +1,5 @@
 from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
+from reportlab.lib.colors import HexColor
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -27,6 +27,15 @@ class ViolationNoticePDF:
 
         # Set up styles
         self.styles = getSampleStyleSheet()
+        self.styles.add(
+            ParagraphStyle(
+                name="DistrictName",
+                fontName="Helvetica-Bold",
+                fontSize=18,
+                textColor=HexColor("#2a4d8f"),  # A nice blue
+                spaceAfter=0.15 * inch,
+            )
+        )
         self.styles.add(
             ParagraphStyle(
                 name="DistrictInfo",
@@ -136,24 +145,41 @@ class ViolationNoticePDF:
 
     def _format_date(self, date_value):
         """
-        Convert various date formats to a string.
-        Handles datetime objects, pandas Timestamps, and strings.
-
-        Args:
-            date_value: A date in various possible formats
-
-        Returns:
-            str: Formatted date string
+        Convert date formats to 'Month Dayth, Year' (e.g., May 20th, 2025).
+        Handles datetime objects, pandas Timestamps, and strings in MM/DD/YYYY or YYYY-MM-DD format.
         """
-        if isinstance(date_value, str):
-            return date_value
+
+        def day_with_suffix(day):
+            # Returns day with ordinal suffix (e.g., 1st, 2nd, 3rd, 4th, etc.)
+            if 11 <= day <= 13:
+                return f"{day}th"
+            last = day % 10
+            if last == 1:
+                return f"{day}st"
+            elif last == 2:
+                return f"{day}nd"
+            elif last == 3:
+                return f"{day}rd"
+            else:
+                return f"{day}th"
 
         # Handle pandas Timestamp or datetime
         if hasattr(date_value, "strftime"):
-            # Format as "DD-MMM" (e.g., "26-May")
-            return date_value.strftime("%d-%b")
+            day = int(date_value.strftime("%d"))
+            return f"{date_value.strftime('%B')} {day_with_suffix(day)}, {date_value.strftime('%Y')}"
 
-        # If it's some other type, convert to string
+        # Handle string in MM/DD/YYYY or YYYY-MM-DD format
+        if isinstance(date_value, str):
+            for fmt in ("%m/%d/%Y", "%Y-%m-%d"):
+                try:
+                    parsed = datetime.strptime(date_value, fmt)
+                    day = parsed.day
+                    return f"{parsed.strftime('%B')} {day_with_suffix(day)}, {parsed.strftime('%Y')}"
+                except Exception:
+                    continue
+            return date_value  # fallback to original string
+
+        # Fallback
         return str(date_value)
 
     def _process_image_with_exif(
@@ -281,12 +307,12 @@ class ViolationNoticePDF:
         # Ensure all required fields are present
         required_fields = [
             "district_name",
-            "district_address_line1",
-            "district_address_line2",
-            "district_phone",
             "notice_date",
             "homeowner_name",
             "homeowner_address_line1",
+            "homeowner_city",
+            "homeowner_state",
+            "homeowner_zip",
             "property_address",
             "violation_type",
             "violation_image_path",
@@ -324,12 +350,15 @@ class ViolationNoticePDF:
         # Build the content
         content = []
 
-        # District information
-        district_info = f"""{data['district_name']}<br/>
-                         {data['district_address_line1']}<br/>
-                         {data['district_address_line2']}<br/>
-                         {data['district_phone']}"""
-        content.append(Paragraph(district_info, self.styles["DistrictInfo"]))
+        # District name (large and blue)
+        content.append(Paragraph(data["district_name"], self.styles["DistrictName"]))
+
+        # District address block (standard style)
+        district_address_block = """c/o Public Alliance LLC<br/>
+                         7555 E. Hampden Ave., Suite 501<br/>
+                         Denver, CO 80231<br/>
+                         (720) 213-6621"""
+        content.append(Paragraph(district_address_block, self.styles["DistrictInfo"]))
 
         # Notice title
         content.append(Paragraph("Courtesy Notice", self.styles["NoticeTitle"]))
@@ -340,7 +369,8 @@ class ViolationNoticePDF:
 
         # Recipient information
         recipient_info = f"""{data['homeowner_name']}<br/>
-                          {data['homeowner_address_line1']}"""
+                          {data['homeowner_address_line1']}<br/>
+                          {data['homeowner_city']}, {data['homeowner_state']} {data['homeowner_zip']}"""
 
         # Add second address line if available
         if "homeowner_address_line2" in data and data["homeowner_address_line2"]:
@@ -385,21 +415,15 @@ class ViolationNoticePDF:
         help in achieving compliance."""
         content.append(Paragraph(letter_content, self.styles["Content"]))
 
+        # Add regulation information
+        regulation = data["regulation"]
         content.append(
             Paragraph(
-                """We ask that you remedy this matter within the next 30 days from the date of this letter.
-        Failure to do so may result in potential fines per the governing documents.""",
-                self.styles["Content"],
+                f"{regulation['code']} {regulation['title']}",
+                self.styles["RegulationCode"],
             )
         )
-
-        content.append(
-            Paragraph(
-                """If you have already resolved the above matter, we thank you for your prompt attention and
-        appreciate your help keeping the neighborhood looking its best.""",
-                self.styles["Content"],
-            )
-        )
+        content.append(Paragraph(regulation["text"], self.styles["RegulationText"]))
 
         # Add violation image with EXIF orientation handling
         if os.path.exists(data["violation_image_path"]):
@@ -423,15 +447,21 @@ class ViolationNoticePDF:
             content.append(img)
             content.append(Paragraph("Violation Image", self.styles["ImageCaption"]))
 
-        # Add regulation information
-        regulation = data["regulation"]
         content.append(
             Paragraph(
-                f"{regulation['code']} {regulation['title']}",
-                self.styles["RegulationCode"],
+                """We ask that you remedy this matter within the next 30 days from the date of this letter.
+        Failure to do so may result in potential fines per the governing documents.""",
+                self.styles["Content"],
             )
         )
-        content.append(Paragraph(regulation["text"], self.styles["RegulationText"]))
+
+        content.append(
+            Paragraph(
+                """If you have already resolved the above matter, we thank you for your prompt attention and
+        appreciate your help keeping the neighborhood looking its best.""",
+                self.styles["Content"],
+            )
+        )
 
         # Closing
         content.append(Paragraph("Sincerely,", self.styles["Closing"]))

@@ -1,18 +1,20 @@
 import pandas as pd
 import os
 from pdf_generator.generate_pdf import ViolationNoticePDF
+import re
+from docx import Document
+from docx.shared import Inches, Pt
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 highland_mead_data = {
-    "district_name": "Highlands Mead",
-    "district_address_line1": "123 Highland Ave",
-    "district_address_line2": "Suite 100",
-    "district_phone": "555-123-4567",
+    "district_name": "Highlands Mead Metro District",
 }
 
 highland_mead_rules = {
-    "1.8 Vehicles, Repair": {
+    "1.8 Vehicle Repair": {
         "code": "1.8",
-        "title": "Vehicles, Repair",
+        "title": "Vehicle Repair",
         "text": (
             "No activity such as, but not limited to, maintenance, repair, rebuilding, dismantling, repainting or "
             "servicing of any kind of vehicles, trailers or boats, may be performed or conducted in the Community "
@@ -38,16 +40,29 @@ highland_mead_rules = {
             "Landscaping must be kept at all times in a neat, healthy, weed-free, and attractive condition."
         ),
     },
+    "2.51 Unsightly Conditions": {
+        "code": "2.51",
+        "title": "Unsightly Conditions",
+        "text": (
+            "No unsightly articles or conditions shall be permitted to remain or accumulate on any Lot. By way of example, "
+            "but not limitation, such items could include rock or mulch piles, construction materials, abandoned toys, "
+            "inoperable vehicles, dead or dying landscaping, peeling or faded paint, gardening equipment not in actual use, "
+            "fencing in disrepair, etc."
+        ),
+    },
 }
 
 # Define field renaming
 rename_map = {
     "Account Name": "homeowner_name",
-    "ServiceAddress": "homeowner_address_line1",
+    "MailAddressLine1": "homeowner_address_line1",
+    "MailCity": "homeowner_city",
+    "MailState": "homeowner_state",
+    "MailZip": "homeowner_zip",
     "Violation Date": "notice_date",
     "Violation Type": "violation_type",
     "Email": "homeowner_email",
-    "Address": "property_address",
+    "PropertyAddressLine1": "property_address",
 }
 
 
@@ -71,18 +86,46 @@ def read_dataset(
         return None
 
 
+def clean_address(address):
+    """
+    Removes trailing periods from common street abbreviations (e.g., 'St.' -> 'St').
+    """
+    # List of common abbreviations (add more as needed)
+    abbreviations = [
+        "st",
+        "ave",
+        "blvd",
+        "dr",
+        "rd",
+        "ln",
+        "ct",
+        "pl",
+        "trl",
+        "pkwy",
+        "cir",
+        "ter",
+        "way",
+    ]
+    # Regex: replace abbreviation with period at end of word with no period
+    pattern = re.compile(
+        r"\b(" + "|".join(abbreviations) + r")\.(?=\s|$)", re.IGNORECASE
+    )
+    return pattern.sub(lambda m: m.group(1), address)
+
+
 def collect_image(address):
     """
     Collects the image path for a given address.
     :param address: Address string to search for images
     """
 
-    # remove all whitespace from address and convert to lowercase
+    # remove all whitespace from address, remove punctuation, convert to lowercase
+    address = clean_address(address)
     address = "".join(address.split())
     address = address.lower()
 
     # define the directory where images are stored
-    image_dir = "../images"
+    image_dir = "../images/HighlandsMead"
 
     # find all images in the directory that match the address
     images = [
@@ -112,6 +155,20 @@ def generate_pdfs():
     if df is None:
         print("No data to process.")
         return
+
+    # # collect addrresses for Avery 48807 labels
+    # addresses = []
+    # for index, row in df.iterrows():
+    #     {
+    #         "name": row.get("Account Name", "N/A"),
+    #         "street": row.get("MailAddressLine1", "N/A"),
+    #         "city": row.get("MailCity", "N/A"),
+    #         "state": row.get("MailState", "N/A"),
+    #         "zip": row.get("MailZip", "N/A"),
+    #     }
+
+    # # send to Avery 48807 labels
+    # create_avery_48807_labels(addresses)
 
     # strip trailing whitespace from column names
     df.columns = df.columns.str.strip()
@@ -156,6 +213,55 @@ def generate_pdfs():
         # Generate PDF
         pdf_path = generator.generate_pdf(data_dict)
         print(f"PDF generated at: {pdf_path}")
+
+
+def create_avery_48807_labels(addresses, output_file="avery_48807_labels.docx"):
+    """
+    Function to create Avery 48807 labels in a Word document.
+    :param addresses: List of address dictionaries with keys: name, street, city, state, zip
+    """
+    doc = Document()
+
+    labels_per_page = 10  # 2 cols × 5 rows
+    per_row = 2
+    per_col = 5
+
+    chunks = [
+        addresses[i : i + labels_per_page]
+        for i in range(0, len(addresses), labels_per_page)
+    ]
+
+    for page in chunks:
+        table = doc.add_table(rows=per_col, cols=per_row)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        table.autofit = False
+
+        # Set column widths and height approximations
+        for row in table.rows:
+            for cell in row.cells:
+                cell.width = Inches(4)
+                cell.height = Inches(2)
+                cell.paragraphs[0].paragraph_format.alignment = (
+                    WD_PARAGRAPH_ALIGNMENT.LEFT
+                )
+
+        i = 0
+        for row in table.rows:
+            for cell in row.cells:
+                if i < len(page):
+                    a = page[i]
+                    label = f"{a['name']}\n{a['street']}\n{a['city']}, {a['state']} {a['zip']}"
+                    p = cell.paragraphs[0]
+                    run = p.add_run(label)
+                    run.font.size = Pt(12)
+                    i += 1
+                else:
+                    cell.text = ""
+
+        doc.add_page_break()
+
+    doc.save(output_file)
+    print(f"Saved Avery 48807 label file as: {output_file}")
 
 
 generate_pdfs()

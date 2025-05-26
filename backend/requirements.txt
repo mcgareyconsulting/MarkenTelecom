@@ -12,6 +12,7 @@ gunicorn==23.0.0
 importlib_metadata==8.7.0
 itsdangerous==2.2.0
 Jinja2==3.1.6
+lxml==5.4.0
 MarkupSafe==3.0.2
 numpy==2.0.2
 openpyxl==3.1.5
@@ -22,11 +23,13 @@ pycparser==2.22
 pydyf==0.11.0
 pyphen==0.17.2
 python-dateutil==2.9.0.post0
+python-docx==1.1.2
 pytz==2025.2
 reportlab==4.4.1
 six==1.17.0
 tinycss2==1.4.0
 tinyhtml5==2.0.0
+typing_extensions==4.13.2
 tzdata==2025.2
 weasyprint==65.1
 webencodings==0.5.1
