@@ -1,6 +1,7 @@
 # My stuff
 .DS_Store
 .xlsx
+images/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
