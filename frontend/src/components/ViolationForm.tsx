@@ -22,9 +22,9 @@ export function ViolationForm() {
   const [address, setAddress] = useState<AddressData>({
     line1: '',
     line2: '',
-    city: 'Fort Collins',
-    state: 'CO',
-    zip: '80524',
+    city: '',
+    state: '',
+    zip: '',
     district: '',
   });
 
@@ -197,6 +197,28 @@ export function ViolationForm() {
         </div>
       )}
 
+      <div className="md:col-span-2">
+        <label
+          htmlFor="district"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Metro District
+        </label>
+        <select
+          id="district"
+          value={address.district}
+          onChange={handleAddressChange('district')}
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          required
+        >
+          {districts.map((district) => (
+            <option key={district.value} value={district.value}>
+              {district.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="mb-8">
         <h2 className="text-lg font-medium text-gray-800 mb-4">
           Location Details
@@ -249,7 +271,6 @@ export function ViolationForm() {
               onChange={handleAddressChange('city')}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               required
-              readOnly
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -267,7 +288,6 @@ export function ViolationForm() {
                 onChange={handleAddressChange('state')}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 required
-                readOnly
               />
             </div>
             <div>
@@ -284,30 +304,8 @@ export function ViolationForm() {
                 onChange={handleAddressChange('zip')}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 required
-                readOnly
               />
             </div>
-          </div>
-          <div className="md:col-span-2">
-            <label
-              htmlFor="district"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Metro District
-            </label>
-            <select
-              id="district"
-              value={address.district}
-              onChange={handleAddressChange('district')}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              {districts.map((district) => (
-                <option key={district.value} value={district.value}>
-                  {district.label}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
       </div>
@@ -345,6 +343,6 @@ export function ViolationForm() {
           {isSubmitting ? 'Submitting...' : 'Submit Report'}
         </button>
       </div>
-    </form>
+    </form >
   );
 }
