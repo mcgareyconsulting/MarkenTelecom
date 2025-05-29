@@ -106,7 +106,6 @@ export function ViolationItem({
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               className="hidden"
               onChange={handleImageChange}
             />
