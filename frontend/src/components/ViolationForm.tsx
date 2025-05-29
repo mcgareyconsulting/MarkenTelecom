@@ -140,21 +140,21 @@ export function ViolationForm() {
       const response = await fetch('/api/violations', {
         method: 'POST',
         body: formData,
-        // Don't set Content-Type header, browser will set it with boundary for FormData
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit report');
+      let result: any = null;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        result = await response.json();
       }
 
-      const result = await response.json();
-      console.log('Submission successful:', result);
+      if (!response.ok) {
+        throw new Error(result?.error || 'Failed to submit report');
+      }
 
-      // Show success message
       setSuccessMessage('Report submitted successfully! Report ID: ' + result.report_id);
 
-      // Reset form (optional)
+      // Reset form
       setAddress({
         line1: '',
         line2: '',
@@ -163,7 +163,6 @@ export function ViolationForm() {
         zip: '',
         district: '',
       });
-
       setViolations([{
         id: 1,
         type: '',
