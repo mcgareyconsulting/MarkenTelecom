@@ -340,6 +340,14 @@ def health_check():
     return jsonify({"status": "ok"})
 
 
+@app.route("/setup-db")
+def setup_db():
+    from flask import jsonify
+
+    db.create_all()
+    return jsonify({"message": "Database tables created!"})
+
+
 # Error handlers
 @app.errorhandler(413)
 def too_large(e):
