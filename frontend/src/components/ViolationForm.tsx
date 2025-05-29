@@ -136,6 +136,8 @@ export function ViolationForm() {
         }
       });
 
+      console.log('Submitting report with data:', formData);
+
       // Send the request to the backend
       const response = await fetch('/api/violations', {
         method: 'POST',
