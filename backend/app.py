@@ -288,6 +288,15 @@ def create_violation_report():
         return jsonify({"error": "Failed to create violation report"}), 500
 
 
+@app.route("/api/images/<filename>")
+def serve_image(filename: str):
+    """Serve uploaded images"""
+    try:
+        return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+    except Exception as e:
+        return jsonify({"error": "Image not found"}), 404
+
+
 # @app.route("/api/address/autocomplete", methods=["GET"])
 # def autocomplete():
 #     """API endpoint for address autocomplete"""
