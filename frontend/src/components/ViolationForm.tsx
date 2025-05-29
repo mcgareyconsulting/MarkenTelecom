@@ -46,24 +46,12 @@ export function ViolationForm() {
       label: 'Select Metro District',
     },
     {
-      value: 'district1',
-      label: 'Metro District 1',
+      value: 'waters_edge',
+      label: 'Waters Edge Metro District',
     },
     {
-      value: 'district2',
-      label: 'Metro District 2',
-    },
-    {
-      value: 'district3',
-      label: 'Metro District 3',
-    },
-    {
-      value: 'district4',
-      label: 'Metro District 4',
-    },
-    {
-      value: 'district5',
-      label: 'Metro District 5',
+      value: 'highlands_mead',
+      label: 'Highlands Mead Metro District',
     },
   ];
 
@@ -345,8 +333,8 @@ export function ViolationForm() {
           type="submit"
           disabled={isSubmitting}
           className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isSubmitting
-              ? 'bg-blue-400 text-white cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
+            ? 'bg-blue-400 text-white cursor-not-allowed'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
         >
           {isSubmitting ? 'Submitting...' : 'Submit Report'}
