@@ -154,6 +154,7 @@ export function ViolationForm() {
         throw new Error(result?.error || 'Failed to submit report');
       }
 
+      console.log('Report submitted successfully:', result);
       setSuccessMessage('Report submitted successfully! Report ID: ' + result.report_id);
 
       // Reset form

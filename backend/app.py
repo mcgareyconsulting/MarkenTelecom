@@ -203,6 +203,8 @@ def create_violation_report():
 
         data = json.loads(request.form["data"])
 
+        print("Received data:", data)
+
         # Validate required fields
         address = data.get("address", {})
         violations_data = data.get("violations", [])
