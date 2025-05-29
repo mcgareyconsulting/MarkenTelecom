@@ -195,8 +195,8 @@ def generate_unique_filename(original_filename: str) -> str:
 def create_violation_report():
     """Create a new violation report with images"""
     try:
-        # Get JSON data
-        if "data" not in request.form:
+        # Ensure form data is present
+        if not request.form or "data" not in request.form:
             return jsonify({"error": "Missing form data"}), 400
 
         import json
@@ -281,7 +281,9 @@ def create_violation_report():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Failed to create violation report: {str(e)}"}), 500
+        # Log the error for debugging
+        print(f"Error in create_violation_report: {e}")
+        return jsonify({"error": "Failed to create violation report"}), 500
 
 
 # @app.route("/api/address/autocomplete", methods=["GET"])
