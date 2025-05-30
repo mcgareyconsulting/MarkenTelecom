@@ -107,7 +107,6 @@ export function ViolationItem({
               type="file"
               accept="image/*"
               className="hidden"
-              capture="environment"
               onChange={handleImageChange}
             />
           </label>
