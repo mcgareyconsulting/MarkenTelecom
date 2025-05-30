@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { PlusCircleIcon } from 'lucide-react';
 import { ViolationItem } from './ViolationItem';
 
@@ -9,17 +9,25 @@ type Violation = {
   notes: string;
 };
 
-type AddressSuggestion = {
-  address: string;
-  account_number: string;
-  account_name: string;
+type AddressData = {
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  zip: string;
+  district: string;
 };
 
 export function ViolationForm() {
-  const [address, setAddress] = useState('');
-  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [address, setAddress] = useState<AddressData>({
+    line1: '',
+    line2: '',
+    city: 'Mead',
+    state: 'CO',
+    zip: '80542',
+    district: '',
+  });
+
   const [violations, setViolations] = useState<Violation[]>([{
     id: 1,
     type: '',
@@ -27,75 +35,32 @@ export function ViolationForm() {
     notes: ''
   }]);
 
-  // Ref for the suggestions container
-  const suggestionsRef = useRef<HTMLDivElement>(null);
+  // Add loading and error states
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Debounce timer ref
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const districts = [
+    {
+      value: '',
+      label: 'Select Metro District',
+    },
+    {
+      value: 'waters_edge',
+      label: 'Waters Edge Metro District',
+    },
+    {
+      value: 'highlands_mead',
+      label: 'Highlands Mead Metro District',
+    },
+  ];
 
-  // Function to fetch address suggestions
-  const fetchAddressSuggestions = async (query: string) => {
-    if (!query || query.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await fetch(`https://markentelecombackend.onrender.com/api/address/autocomplete?q=${encodeURIComponent(query)}&limit=5`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch suggestions');
-      }
-
-      const data = await response.json();
-      setSuggestions(data.suggestions || []);
-    } catch (error) {
-      console.error('Error fetching address suggestions:', error);
-      setSuggestions([]);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleAddressChange = (field: keyof AddressData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setAddress((prev) => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
   };
-
-  // Handle address input change with debounce
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setAddress(value);
-
-    // Clear previous timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    // Set new timer
-    debounceTimerRef.current = setTimeout(() => {
-      fetchAddressSuggestions(value);
-    }, 300); // 300ms debounce
-
-    setShowSuggestions(true);
-  };
-
-  // Handle suggestion selection
-  const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
-    setAddress(suggestion.address);
-    setSuggestions([]);
-    setShowSuggestions(false);
-  };
-
-  // Handle click outside to close suggestions
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const handleAddViolation = () => {
     const newId = violations.length > 0 ? Math.max(...violations.map(v => v.id)) + 1 : 1;
@@ -120,61 +85,232 @@ export function ViolationForm() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would send the data to a server
-    console.log({
-      address,
-      violations
-    });
-    alert('Report submitted successfully!');
+
+    // Reset states
+    setError(null);
+    setSuccessMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      // Validate form data
+      if (!address.line1 || !address.city || !address.state || !address.zip || !address.district) {
+        throw new Error('Please fill in all required address fields');
+      }
+
+      if (violations.length === 0) {
+        throw new Error('At least one violation is required');
+      }
+
+      if (violations.some(v => !v.type)) {
+        throw new Error('All violations must have a type selected');
+      }
+
+      // Create FormData object
+      const formData = new FormData();
+
+      // Add JSON data
+      const jsonData = {
+        address: {
+          line1: address.line1,
+          line2: address.line2,
+          city: address.city,
+          state: address.state,
+          zip: address.zip,
+          district: address.district
+        },
+        violations: violations.map(({ id, type, notes }) => ({
+          id,
+          type,
+          notes
+        }))
+      };
+
+      formData.append('data', JSON.stringify(jsonData));
+
+      // Add image files with the correct keys
+      violations.forEach((violation, index) => {
+        if (violation.image) {
+          formData.append(`violation_${index}_image`, violation.image);
+        }
+      });
+
+      console.log('Submitting report with data:', formData);
+
+      // Send the request to the backend
+      const response = await fetch('https://markentelecombackend.onrender.com/api/violations', {
+        method: 'POST',
+        body: formData,
+      });
+
+      let result: any = null;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        result = await response.json();
+      }
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Failed to submit report');
+      }
+
+      console.log('Report submitted successfully:', result);
+      setSuccessMessage('Report submitted successfully! Report ID: ' + result.report_id);
+
+      // Reset form
+      setAddress({
+        line1: '',
+        line2: '',
+        city: '',
+        state: '',
+        zip: '',
+        district: '',
+      });
+      setViolations([{
+        id: 1,
+        type: '',
+        image: null,
+        notes: ''
+      }]);
+
+    } catch (err) {
+      console.error('Submission error:', err);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
-      <div className="mb-6 relative">
-        <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-          Address
-        </label>
-        <input
-          id="address"
-          type="text"
-          value={address}
-          onChange={handleAddressChange}
-          onFocus={() => setShowSuggestions(true)}
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Enter address line 1"
-          required
-        />
+      {/* Show error message if there is one */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
 
-        {/* Address suggestions dropdown */}
-        {showSuggestions && (
-          <div
-            ref={suggestionsRef}
-            className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
-          >
-            {isLoading ? (
-              <div className="p-2 text-gray-500">Loading...</div>
-            ) : suggestions.length > 0 ? (
-              <ul>
-                {suggestions.map((suggestion, index) => (
-                  <li
-                    key={index}
-                    onClick={() => handleSelectSuggestion(suggestion)}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    <div className="font-medium">{suggestion.address}</div>
-                    <div className="text-sm text-gray-500">
-                      {suggestion.account_name} ({suggestion.account_number})
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : address.length >= 2 ? (
-              <div className="p-2 text-gray-500">No suggestions found</div>
-            ) : null}
+      {/* Show success message if there is one */}
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+          {successMessage}
+        </div>
+      )}
+
+      <div className="md:col-span-2">
+        <label
+          htmlFor="district"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Metro District
+        </label>
+        <select
+          id="district"
+          value={address.district}
+          onChange={handleAddressChange('district')}
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          required
+        >
+          {districts.map((district) => (
+            <option key={district.value} value={district.value}>
+              {district.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-8">
+        <h2 className="text-lg font-medium text-gray-800 mb-4">
+          Location Details
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label
+              htmlFor="line1"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Address Line 1
+            </label>
+            <input
+              id="line1"
+              type="text"
+              value={address.line1}
+              onChange={handleAddressChange('line1')}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Street address"
+              required
+            />
           </div>
-        )}
+          <div className="md:col-span-2">
+            <label
+              htmlFor="line2"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Address Line 2
+            </label>
+            <input
+              id="line2"
+              type="text"
+              value={address.line2}
+              onChange={handleAddressChange('line2')}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Apartment, suite, unit, etc. (optional)"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="city"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              City
+            </label>
+            <input
+              id="city"
+              type="text"
+              value={address.city}
+              onChange={handleAddressChange('city')}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              required
+              readOnly
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="state"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                State
+              </label>
+              <input
+                id="state"
+                type="text"
+                value={address.state}
+                onChange={handleAddressChange('state')}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                required
+                readOnly
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="zip"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                ZIP Code
+              </label>
+              <input
+                id="zip"
+                type="text"
+                value={address.zip}
+                onChange={handleAddressChange('zip')}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                required
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mb-6">
@@ -201,11 +337,15 @@ export function ViolationForm() {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={isSubmitting}
+          className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isSubmitting
+            ? 'bg-blue-400 text-white cursor-not-allowed'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
         >
-          Submit Report
+          {isSubmitting ? 'Submitting...' : 'Submit Report'}
         </button>
       </div>
-    </form>
+    </form >
   );
 }
