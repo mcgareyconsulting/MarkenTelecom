@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Dict, Any
 import uuid
 from dotenv import load_dotenv
+from utils.violation_codes import get_violation_titles_for_district
 
 
 # Load environment variables from .env file
@@ -255,7 +256,24 @@ def generate_unique_filename(original_filename: str) -> str:
 #         return False
 
 
-# api routes
+@app.route("/api/violations_list_per_district", methods=["GET"])
+def get_violation_list():
+    """
+    API endpoint to get violation titles for a given district.
+    Usage: /api/violation_titles?district=waters_edge
+    """
+    district = request.args.get("district")
+    if not district:
+        return jsonify({"error": "Missing district parameter"}), 400
+
+    try:
+        titles = get_violation_titles_for_district(district)
+        return jsonify({"titles": titles})
+    except Exception as e:
+        print(f"Error fetching violation titles: {e}")
+        return jsonify({"error": "Failed to fetch violation titles"}), 500
+
+
 @app.route("/api/violations", methods=["POST"])
 def create_violation_report():
     """Create a new violation report with images"""
