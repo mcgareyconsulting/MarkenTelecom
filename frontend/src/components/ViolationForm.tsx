@@ -32,9 +32,9 @@ export function ViolationForm() {
   const [address, setAddress] = useState<AddressData>({
     line1: '',
     line2: '',
-    city: 'Mead',
-    state: 'CO',
-    zip: '80542',
+    city: '',
+    state: '',
+    zip: '',
     district: '',
   });
 
@@ -72,6 +72,10 @@ export function ViolationForm() {
       value: 'highlands_mead',
       label: 'Highlands Mead Metro District',
     },
+    {
+      value: 'muegge_farms',
+      label: 'Muegge Farms Metro District',
+    }
   ];
 
   // Function to fetch address suggestions
@@ -83,7 +87,14 @@ export function ViolationForm() {
 
     setIsLoadingSuggestions(true);
     try {
-      const response = await fetch(`/api/address/autocomplete?q=${encodeURIComponent(query)}&limit=5`);
+
+      //  Define base url
+      const baseUrl =
+        import.meta.env.MODE === 'production'
+          ? 'https://markentelecombackend.onrender.com'
+          : 'http://127.0.0.1:8000';
+
+      const response = await fetch(`${baseUrl}/api/address/autocomplete?q=${encodeURIComponent(query)}&limit=5`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch suggestions');
@@ -140,16 +151,23 @@ export function ViolationForm() {
       setAddress((prev) => ({
         ...prev,
         line1: suggestion.service_address,
-        city: suggestion.city || 'Mead',
-        state: suggestion.state || 'CO',
-        zip: suggestion.zip || '80542',
+        city: suggestion.city || '',
+        state: suggestion.state || '',
+        zip: suggestion.zip || '',
         district: suggestion.district || '',
       }));
     } else {
       // Make a second API call to get complete address details
       try {
+
+        //  Define base url
+        const baseUrl =
+          import.meta.env.MODE === 'production'
+            ? 'https://markentelecombackend.onrender.com'
+            : 'http://127.0.0.1:8000';
+
         setIsLoadingSuggestions(true);
-        const response = await fetch(`https://markentelecombackend.onrender.com/api/address/details?address=${encodeURIComponent(suggestion.service_address)}`);
+        const response = await fetch(`${baseUrl}/api/address/details?address=${encodeURIComponent(suggestion.service_address)}`);
 
         if (response.ok) {
           const addressDetails = await response.json();
@@ -158,9 +176,9 @@ export function ViolationForm() {
           setAddress((prev) => ({
             ...prev,
             line1: suggestion.service_address,
-            city: addressDetails.city || 'Mead',
-            state: addressDetails.state || 'CO',
-            zip: addressDetails.zip || '80542',
+            city: addressDetails.city || '',
+            state: addressDetails.state || '',
+            zip: addressDetails.zip || '',
             district: addressDetails.district || '',
           }));
         } else {
@@ -169,9 +187,9 @@ export function ViolationForm() {
           setAddress((prev) => ({
             ...prev,
             line1: suggestion.service_address,
-            city: 'Mead',
-            state: 'CO',
-            zip: '80542',
+            city: '',
+            state: '',
+            zip: '',
             district: '',
           }));
         }
@@ -181,9 +199,9 @@ export function ViolationForm() {
         setAddress((prev) => ({
           ...prev,
           line1: suggestion.service_address,
-          city: 'Mead',
-          state: 'CO',
-          zip: '80542',
+          city: '',
+          state: '',
+          zip: '',
           district: '',
         }));
       } finally {
@@ -298,8 +316,14 @@ export function ViolationForm() {
 
       console.log('Submitting report with data:', formData);
 
+      //  Define base url
+      const baseUrl =
+        import.meta.env.MODE === 'production'
+          ? 'https://markentelecombackend.onrender.com'
+          : 'http://127.0.0.1:8000';
+
       // Send the request to the backend
-      const response = await fetch('https://markentelecombackend.onrender.com/api/violations', {
+      const response = await fetch(`${baseUrl}/api/violations`, {
         method: 'POST',
         body: formData,
       });
@@ -321,9 +345,9 @@ export function ViolationForm() {
       setAddress({
         line1: '',
         line2: '',
-        city: 'Mead',
-        state: 'CO',
-        zip: '80542',
+        city: '',
+        state: '',
+        zip: '',
         district: '',
       });
       setViolations([{
@@ -358,6 +382,9 @@ export function ViolationForm() {
       )}
 
       <div className="md:col-span-2 mb-6">
+        <h2 className="text-lg font-medium text-gray-800 mb-4">
+          Location Details
+        </h2>
         <label
           htmlFor="district"
           className="block text-sm font-medium text-gray-700 mb-1"
@@ -380,9 +407,6 @@ export function ViolationForm() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-lg font-medium text-gray-800 mb-4">
-          Location Details
-        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2 relative">
             <label
