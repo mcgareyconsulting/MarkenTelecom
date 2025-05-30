@@ -179,7 +179,7 @@ export function ViolationForm() {
             city: addressDetails.city || '',
             state: addressDetails.state || '',
             zip: addressDetails.zip || '',
-            district: addressDetails.district || '',
+            district: prev.district || '',
           }));
         } else {
           // Fallback to default values if API call fails
@@ -190,7 +190,7 @@ export function ViolationForm() {
             city: '',
             state: '',
             zip: '',
-            district: '',
+            district: prev.district
           }));
         }
       } catch (error) {
@@ -202,7 +202,7 @@ export function ViolationForm() {
           city: '',
           state: '',
           zip: '',
-          district: '',
+          district: prev.district,
         }));
       } finally {
         setIsLoadingSuggestions(false);
