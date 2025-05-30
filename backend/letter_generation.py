@@ -262,6 +262,3 @@ def create_avery_48807_labels(addresses, output_file="avery_48807_labels.docx"):
 
     doc.save(output_file)
     print(f"Saved Avery 48807 label file as: {output_file}")
-
-
-generate_pdfs()

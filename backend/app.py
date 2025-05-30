@@ -21,9 +21,13 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "your-secret-key-change-this")
 
 # Database configuration
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL", "sqlite:///violations.db"
-)
+if os.environ.get("FLASK_DEBUG", "0") == "1":
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///violations.db"
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+
+print("Using database:", app.config["SQLALCHEMY_DATABASE_URI"])  # <-- Add this line
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # File upload configuration
@@ -142,6 +146,63 @@ class ViolationImage(db.Model):
 #######################
 # End Database Models #
 #######################
+
+# Load and normalize muegge farms data
+df = pd.read_excel("../datasets/MFMD_CL_250527.xlsx")
+
+
+# # Normalize service address
+# def normalize_address(address):
+#     if not isinstance(address, str):
+#         return ""
+#     address = address.lower()
+#     address = re.sub(r"\b(street|st)\b", "st", address)
+#     address = re.sub(r"\b(avenue|ave)\b", "ave", address)
+#     address = re.sub(r"\b(road|rd)\b", "rd", address)
+#     address = re.sub(r"\b(drive|dr)\b", "dr", address)
+#     address = re.sub(r"\s+", " ", address)
+#     return address.strip()
+
+
+# # Normalize service addresses
+# df["normalized_service_address"] = df["ServiceAddress"].apply(normalize_address)
+
+# In-memory dataset (list of dicts)
+homeowner_records = df.to_dict(orient="records")
+
+
+@app.route("/api/address/autocomplete", methods=["GET"])
+def autocomplete():
+    query = request.args.get("q", "").lower()
+    results = []
+    for record in homeowner_records:
+        if query in record["ServiceAddress"]:
+            # Split city, state, zip
+            city_state_zip = record.get("SvcCitySTZip", "")
+            city, state, zip_code = "", "", ""
+            try:
+                # Example: "Bennett, CO 80010"
+                parts = city_state_zip.split(",")
+                if len(parts) == 2:
+                    city = parts[0].strip()
+                    state_zip = parts[1].strip().split(" ")
+                    if len(state_zip) == 2:
+                        state = state_zip[0]
+                        zip_code = state_zip[1]
+            except Exception as e:
+                print(f"Error parsing city/state/zip: {city_state_zip} - {e}")
+
+            results.append(
+                {
+                    "service_address": record["ServiceAddress"],
+                    "city": city,
+                    "state": state,
+                    "zip": zip_code,
+                }
+            )
+            if len(results) >= 10:
+                break
+    return jsonify(results)
 
 
 # Utility functions
@@ -347,15 +408,15 @@ def serve_image(filename: str):
 #         return jsonify({"error": "Internal server error"}), 500
 
 
-def generate_violation_notices(district, date):
-    """
-    Generate violation noticies for addresses in district and on a specific date.
-    """
+# def generate_violation_notices(district, date):
+#     """
+#     Generate violation noticies for addresses in district and on a specific date.
+#     """
 
-    # Query database for violations: district and date
+#     # Query database for violations: district and date
 
-    # Build data package for PDF generation
-    generate_pdfs()
+#     # Build data package for PDF generation
+#     generate_pdfs()
 
 
 @app.route("/api/health", methods=["GET"])
