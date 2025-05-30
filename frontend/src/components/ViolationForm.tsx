@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PlusCircleIcon } from 'lucide-react';
 import { ViolationItem } from './ViolationItem';
 
@@ -18,6 +18,16 @@ type AddressData = {
   district: string;
 };
 
+type AddressSuggestion = {
+  service_address: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  district?: string;
+  // If your API returns an ID or other identifier for fetching full details
+  id?: string;
+};
+
 export function ViolationForm() {
   const [address, setAddress] = useState<AddressData>({
     line1: '',
@@ -27,6 +37,11 @@ export function ViolationForm() {
     zip: '80542',
     district: '',
   });
+
+  // Autocomplete states
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const [violations, setViolations] = useState<Violation[]>([{
     id: 1,
@@ -39,6 +54,10 @@ export function ViolationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Refs for autocomplete
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const districts = [
     {
@@ -54,6 +73,147 @@ export function ViolationForm() {
       label: 'Highlands Mead Metro District',
     },
   ];
+
+  // Function to fetch address suggestions
+  const fetchAddressSuggestions = async (query: string) => {
+    if (!query || query.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsLoadingSuggestions(true);
+    try {
+      const response = await fetch(`/api/address/autocomplete?q=${encodeURIComponent(query)}&limit=5`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch suggestions');
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data); // Debug log
+
+      // Handle the actual API response structure
+      setSuggestions(data || []);
+    } catch (error) {
+      console.error('Error fetching address suggestions:', error);
+      setSuggestions([]);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  // Handle address line 1 input change with debounce and autocomplete
+  const handleAddressLine1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setAddress((prev) => ({
+      ...prev,
+      line1: value,
+    }));
+
+    // Clear previous timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Set new timer for autocomplete
+    debounceTimerRef.current = setTimeout(() => {
+      fetchAddressSuggestions(value);
+    }, 300); // 300ms debounce
+
+    setShowSuggestions(true);
+  };
+
+  // Handle suggestion selection
+  const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {
+
+    // Update the address line 1 immediately
+    setAddress((prev) => ({
+      ...prev,
+      line1: suggestion.service_address,
+    }));
+
+    setSuggestions([]);
+    setShowSuggestions(false);
+
+    // If the suggestion already contains complete address data
+    if (suggestion.city && suggestion.state && suggestion.zip) {
+      setAddress((prev) => ({
+        ...prev,
+        line1: suggestion.service_address,
+        city: suggestion.city || 'Mead',
+        state: suggestion.state || 'CO',
+        zip: suggestion.zip || '80542',
+        district: suggestion.district || '',
+      }));
+    } else {
+      // Make a second API call to get complete address details
+      try {
+        setIsLoadingSuggestions(true);
+        const response = await fetch(`https://markentelecombackend.onrender.com/api/address/details?address=${encodeURIComponent(suggestion.service_address)}`);
+
+        if (response.ok) {
+          const addressDetails = await response.json();
+          console.log('Address details:', addressDetails);
+
+          setAddress((prev) => ({
+            ...prev,
+            line1: suggestion.service_address,
+            city: addressDetails.city || 'Mead',
+            state: addressDetails.state || 'CO',
+            zip: addressDetails.zip || '80542',
+            district: addressDetails.district || '',
+          }));
+        } else {
+          // Fallback to default values if API call fails
+          console.warn('Failed to fetch address details, using defaults');
+          setAddress((prev) => ({
+            ...prev,
+            line1: suggestion.service_address,
+            city: 'Mead',
+            state: 'CO',
+            zip: '80542',
+            district: '',
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching address details:', error);
+        // Fallback to default values
+        setAddress((prev) => ({
+          ...prev,
+          line1: suggestion.service_address,
+          city: 'Mead',
+          state: 'CO',
+          zip: '80542',
+          district: '',
+        }));
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    }
+  };
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleAddressChange = (field: keyof AddressData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setAddress((prev) => ({
@@ -161,9 +321,9 @@ export function ViolationForm() {
       setAddress({
         line1: '',
         line2: '',
-        city: '',
-        state: '',
-        zip: '',
+        city: 'Mead',
+        state: 'CO',
+        zip: '80542',
         district: '',
       });
       setViolations([{
@@ -197,7 +357,7 @@ export function ViolationForm() {
         </div>
       )}
 
-      <div className="md:col-span-2">
+      <div className="md:col-span-2 mb-6">
         <label
           htmlFor="district"
           className="block text-sm font-medium text-gray-700 mb-1"
@@ -224,7 +384,7 @@ export function ViolationForm() {
           Location Details
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 relative">
             <label
               htmlFor="line1"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -235,11 +395,38 @@ export function ViolationForm() {
               id="line1"
               type="text"
               value={address.line1}
-              onChange={handleAddressChange('line1')}
+              onChange={handleAddressLine1Change}
+              onFocus={() => setShowSuggestions(true)}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder="Street address"
               required
             />
+
+            {/* Address suggestions dropdown */}
+            {showSuggestions && (
+              <div
+                ref={suggestionsRef}
+                className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+              >
+                {isLoadingSuggestions ? (
+                  <div className="p-2 text-gray-500">Loading...</div>
+                ) : suggestions.length > 0 ? (
+                  <ul>
+                    {suggestions.map((suggestion, index) => (
+                      <li
+                        key={index}
+                        onClick={() => handleSelectSuggestion(suggestion)}
+                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                      >
+                        <div className="font-medium">{suggestion.service_address}</div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : address.line1.length >= 2 ? (
+                  <div className="p-2 text-gray-500">No suggestions found</div>
+                ) : null}
+              </div>
+            )}
           </div>
           <div className="md:col-span-2">
             <label
@@ -271,7 +458,6 @@ export function ViolationForm() {
               onChange={handleAddressChange('city')}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               required
-              readOnly
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -289,7 +475,6 @@ export function ViolationForm() {
                 onChange={handleAddressChange('state')}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 required
-                readOnly
               />
             </div>
             <div>
@@ -306,7 +491,6 @@ export function ViolationForm() {
                 onChange={handleAddressChange('zip')}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 required
-                readOnly
               />
             </div>
           </div>
@@ -346,6 +530,6 @@ export function ViolationForm() {
           {isSubmitting ? 'Submitting...' : 'Submit Report'}
         </button>
       </div>
-    </form >
+    </form>
   );
 }
