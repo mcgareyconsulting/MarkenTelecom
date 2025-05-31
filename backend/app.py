@@ -3,82 +3,96 @@ import pandas as pd
 import re
 import os
 from flask_cors import CORS
+from dotenv import load_dotenv
+import json
+import uuid
 
 from letter_generation import generate_pdfs
-
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
-from typing import Dict, Any
-import uuid
-from dotenv import load_dotenv
+from database import db, init_db
+from database.models import ViolationReport, Violation, ViolationImage
 from utils.violation_codes import get_violation_titles_for_district
-
 
 # Load environment variables from .env file
 load_dotenv()
 
-# init app
-app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "your-secret-key-change-this")
 
-# Database configuration
-if os.environ.get("FLASK_DEBUG", "0") == "1":
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///violations.db"
-else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+def create_app():
+    """Application factory pattern"""
+    app = Flask(__name__)
 
-print("Using database:", app.config["SQLALCHEMY_DATABASE_URI"])  # <-- Add this line
+    # Configuration
+    app.config["SECRET_KEY"] = os.environ.get(
+        "SECRET_KEY", "your-secret-key-change-this"
+    )
 
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    # Database configuration
+    if os.environ.get("FLASK_DEBUG", "0") == "1":
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///violations.db"
+    else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 
-# File upload configuration
-UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "uploads/violation_images")
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
-MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB max file size
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["MAX_CONTENT_LENGTH"] = MAX_FILE_SIZE
+    # File upload configuration
+    UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "uploads/violation_images")
+    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+    MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB max file size
 
-# Create upload directory if it doesn't exist
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+    app.config["MAX_CONTENT_LENGTH"] = MAX_FILE_SIZE
+    app.config["ALLOWED_EXTENSIONS"] = ALLOWED_EXTENSIONS
 
-db = SQLAlchemy(app)
-# Enable CORS for the Flask app
-CORS(app)  # Enable CORS for all routes
+    # Create upload directory if it doesn't exist
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+    # Initialize database
+    init_db(app)
+
+    # Enable CORS
+    CORS(app)
+
+    return app
+
+
+# Create app instance
+app = create_app()
 
 # Load and normalize muegge farms data
 df = pd.read_excel("../datasets/MFMD_CL_250527.xlsx")
-
-
-# # Normalize service address
-# def normalize_address(address):
-#     if not isinstance(address, str):
-#         return ""
-#     address = address.lower()
-#     address = re.sub(r"\b(street|st)\b", "st", address)
-#     address = re.sub(r"\b(avenue|ave)\b", "ave", address)
-#     address = re.sub(r"\b(road|rd)\b", "rd", address)
-#     address = re.sub(r"\b(drive|dr)\b", "dr", address)
-#     address = re.sub(r"\s+", " ", address)
-#     return address.strip()
-
-
-# # Normalize service addresses
-# df["normalized_service_address"] = df["ServiceAddress"].apply(normalize_address)
-
-# In-memory dataset (list of dicts)
 homeowner_records = df.to_dict(orient="records")
 
 
+# Utility functions
+def allowed_file(filename: str) -> bool:
+    """Check if file extension is allowed"""
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in app.config["ALLOWED_EXTENSIONS"]
+    )
+
+
+def generate_unique_filename(original_filename: str) -> str:
+    """Generate a unique filename to prevent conflicts"""
+    ext = (
+        original_filename.rsplit(".", 1)[1].lower() if "." in original_filename else ""
+    )
+    unique_name = f"{uuid.uuid4().hex}.{ext}"
+    return unique_name
+
+
+# Routes
 @app.route("/api/address/autocomplete", methods=["GET"])
 def autocomplete():
+    """Address autocomplete endpoint"""
     query = request.args.get("q", "").lower()
     results = []
+
     for record in homeowner_records:
         if query in record["ServiceAddress"]:
             # Split city, state, zip
             city_state_zip = record.get("SvcCitySTZip", "")
             city, state, zip_code = "", "", ""
+
             try:
                 # Example: "Bennett, CO 80010"
                 parts = city_state_zip.split(",")
@@ -99,59 +113,11 @@ def autocomplete():
                     "zip": zip_code,
                 }
             )
+
             if len(results) >= 10:
                 break
+
     return jsonify(results)
-
-
-# Utility functions
-def allowed_file(filename: str) -> bool:
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def generate_unique_filename(original_filename: str) -> str:
-    """Generate a unique filename to prevent conflicts"""
-    ext = (
-        original_filename.rsplit(".", 1)[1].lower() if "." in original_filename else ""
-    )
-    unique_name = f"{uuid.uuid4().hex}.{ext}"
-    return unique_name
-
-
-# # Global variable to store the data
-# address_data = None
-
-
-# def load_data(excel_file="../saddler_ridge.xlsx"):
-#     """Load data from Excel file into memory"""
-#     global address_data
-#     try:
-#         # Check if file exists
-#         if not os.path.exists(excel_file):
-#             print(f"Error: File {excel_file} not found.")
-#             return False
-
-#         # Load the Excel file
-#         df = pd.read_excel(excel_file)
-
-#         # Check if required columns exist
-#         required_columns = ["ServiceAddress", "Account Number", "Account Name"]
-#         missing_columns = [col for col in required_columns if col not in df.columns]
-
-#         if missing_columns:
-#             print(f"Error: Missing required columns: {', '.join(missing_columns)}")
-#             return False
-
-#         # Filter out rows with missing ServiceAddress
-#         df = df.dropna(subset=["ServiceAddress"])
-
-#         # Store the data in memory
-#         address_data = df
-#         print(f"Successfully loaded {len(df)} addresses from {excel_file}")
-#         return True
-#     except Exception as e:
-#         print(f"Error loading data: {str(e)}")
-#         return False
 
 
 @app.route("/api/violations_list_per_district", methods=["GET"])
@@ -180,10 +146,7 @@ def create_violation_report():
         if not request.form or "data" not in request.form:
             return jsonify({"error": "Missing form data"}), 400
 
-        import json
-
         data = json.loads(request.form["data"])
-
         print("Received data:", data)
 
         # Validate required fields
@@ -264,7 +227,6 @@ def create_violation_report():
 
     except Exception as e:
         db.session.rollback()
-        # Log the error for debugging
         print(f"Error in create_violation_report: {e}")
         return jsonify({"error": "Failed to create violation report"}), 500
 
@@ -278,75 +240,10 @@ def serve_image(filename: str):
         return jsonify({"error": "Image not found"}), 404
 
 
-# @app.route("/api/address/autocomplete", methods=["GET"])
-# def autocomplete():
-#     """API endpoint for address autocomplete"""
-#     # Check if data is loaded
-#     if address_data is None:
-#         success = load_data()
-#         if not success:
-#             return jsonify({"error": "Failed to load address data"}), 500
-
-#     # Get query parameters
-#     query = request.args.get("q", "")
-#     limit = request.args.get("limit", 5, type=int)
-
-#     # Validate query
-#     if not query:
-#         return jsonify({"error": "Missing query parameter 'q'"}), 400
-
-#     try:
-#         # Case-insensitive search for partial matches
-#         pattern = re.compile(re.escape(query), re.IGNORECASE)
-
-#         # Filter the dataframe
-#         matches = address_data[
-#             address_data["ServiceAddress"].str.contains(pattern, na=False)
-#         ]
-
-#         # Limit the number of results
-#         matches = matches.head(limit)
-
-#         # Format the results
-#         suggestions = []
-#         for _, row in matches.iterrows():
-#             suggestion = {
-#                 "address": row["ServiceAddress"],
-#                 "account_number": row["Account Number"],
-#                 "account_name": row["Account Name"],
-#             }
-#             suggestions.append(suggestion)
-
-#         return jsonify({"suggestions": suggestions})
-
-#     except Exception as e:
-#         print(f"Error processing request: {str(e)}")
-#         return jsonify({"error": "Internal server error"}), 500
-
-
-# def generate_violation_notices(district, date):
-#     """
-#     Generate violation noticies for addresses in district and on a specific date.
-#     """
-
-#     # Query database for violations: district and date
-
-#     # Build data package for PDF generation
-#     generate_pdfs()
-
-
 @app.route("/api/health", methods=["GET"])
 def health_check():
     """Health check endpoint"""
     return jsonify({"status": "ok"})
-
-
-@app.route("/setup-db")
-def setup_db():
-    from flask import jsonify
-
-    db.create_all()
-    return jsonify({"message": "Database tables created!"})
 
 
 # Error handlers
@@ -367,12 +264,5 @@ def internal_error(e):
 
 
 if __name__ == "__main__":
-    # Only use debug mode if not in production
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
-
-    # Create tables
-    with app.app_context():
-        db.create_all()
-
-    # Run the app (for development only; use Gunicorn or uWSGI in production)
     app.run(debug=debug_mode, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
