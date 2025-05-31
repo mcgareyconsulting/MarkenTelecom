@@ -136,6 +136,7 @@ class District(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    label = db.Column(db.String(50), nullable=True)  # E.g., "Highland Mead"
     code = db.Column(
         db.String(10), nullable=False, unique=True
     )  # E.g., "WEMD" or "HMMD"
@@ -151,13 +152,14 @@ class District(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "label": self.label,
             "code": self.code,
             "description": self.description,
             "accounts": [account.to_dict() for account in self.accounts],
         }
 
     def __repr__(self):
-        return f"<District(name='{self.name}', code='{self.code}')>"
+        return f"<District(label='{self.label}', code='{self.code}')>"
 
 
 class Account(db.Model):
@@ -293,7 +295,9 @@ class ContactPreference(db.Model):
 
 
 # Helper function to import data from Excel to database
-def import_excel_to_db(excel_path, district_code, district_name=None):
+def import_excel_to_db(
+    excel_path, district_code, district_name=None, district_label=None
+):
     """
     Import data from Excel file to database.
 
@@ -301,6 +305,7 @@ def import_excel_to_db(excel_path, district_code, district_name=None):
         excel_path: Path to Excel file
         district_code: District code (e.g., "WEMD" or "HMMD")
         district_name: Name of the district (will prompt if not provided)
+        district_label: Optional label for the district (e.g., "Highland Mead")
     """
     import pandas as pd
 
@@ -315,8 +320,15 @@ def import_excel_to_db(excel_path, district_code, district_name=None):
         if district_name is None:
             district_name = input(f"Enter name for district '{district_code}': ")
 
-        print(f"Creating new district: {district_name} ({district_code})")
-        district = District(name=district_name, code=district_code)
+        if district_label is None:
+            district_label = input(f"Enter label for district '{district_code}': ")
+
+        print(
+            f"Creating new district: {district_name} {district_label} ({district_code})"
+        )
+        district = District(
+            name=district_name, label=district_label, code=district_code
+        )
         db.session.add(district)
         db.session.commit()
     else:

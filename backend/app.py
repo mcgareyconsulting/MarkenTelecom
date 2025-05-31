@@ -72,7 +72,8 @@ app = create_app()
 #         import_excel_to_db(
 #             excel_path="../datasets/WEMD_CL_250527.xlsx",
 #             district_code="WEMD",
-#             district_name="Waters Edge",
+#             district_name="waters_edge",
+#             district_label="Waters Edge",
 #         )
 #         print("✅ Dataset imported successfully!")
 #     except Exception as e:
