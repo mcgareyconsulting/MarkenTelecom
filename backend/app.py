@@ -78,10 +78,6 @@ app = create_app()
 #     except Exception as e:
 #         print(f"❌ Error importing dataset: {e}")
 
-# # Load and normalize muegge farms data
-# df = pd.read_excel("../datasets/MFMD_CL_250527.xlsx")
-# homeowner_records = df.to_dict(orient="records")
-
 
 # Utility functions
 def allowed_file(filename: str) -> bool:
