@@ -9,7 +9,16 @@ import uuid
 
 from letter_generation import generate_pdfs
 from database import db, init_db
-from database.models import ViolationReport, Violation, ViolationImage
+from database.models import (
+    ViolationReport,
+    Violation,
+    ViolationImage,
+    District,
+    Account,
+    AccountHistory,
+    ContactPreference,
+    import_excel_to_db,
+)
 from utils.violation_codes import get_violation_titles_for_district
 
 # Load environment variables from .env file
@@ -57,9 +66,21 @@ def create_app():
 # Create app instance
 app = create_app()
 
-# Load and normalize muegge farms data
-df = pd.read_excel("../datasets/MFMD_CL_250527.xlsx")
-homeowner_records = df.to_dict(orient="records")
+# load dattaset into db
+# with app.app_context():
+#     try:
+#         import_excel_to_db(
+#             excel_path="../datasets/WEMD_CL_250527.xlsx",
+#             district_code="WEMD",
+#             district_name="Waters Edge",
+#         )
+#         print("✅ Dataset imported successfully!")
+#     except Exception as e:
+#         print(f"❌ Error importing dataset: {e}")
+
+# # Load and normalize muegge farms data
+# df = pd.read_excel("../datasets/MFMD_CL_250527.xlsx")
+# homeowner_records = df.to_dict(orient="records")
 
 
 # Utility functions

@@ -353,12 +353,3 @@ def import_excel_to_db(excel_path, district_code, district_name=None):
     print(
         f"Import complete. {added} accounts added to district '{district.name}' ({district.code})."
     )
-
-
-if __name__ == "__main__":
-    # Import data from Excel to database
-    import_excel_to_db(
-        excel_path="../datasets/WEMD_CL_250527.xlsx",
-        district_code="WEMD",
-        district_name="Waters Edge",
-    )
