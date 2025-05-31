@@ -304,22 +304,32 @@ def import_excel_to_db(excel_path, district_code, district_name=None):
     """
     import pandas as pd
 
+    print(f"Starting import from: {excel_path}")
+    print(f"Using district code: {district_code}")
+
     # Check if district exists, create if not
     district = District.query.filter_by(code=district_code).first()
     if not district:
+        print(f"District '{district_code}' not found in database.")
         # Prompt for district name if not provided
         if district_name is None:
             district_name = input(f"Enter name for district '{district_code}': ")
 
+        print(f"Creating new district: {district_name} ({district_code})")
         district = District(name=district_name, code=district_code)
         db.session.add(district)
         db.session.commit()
+    else:
+        print(f"Found district: {district.name} ({district.code})")
 
     # Read Excel file
+    print("Reading Excel file...")
     df = pd.read_excel(excel_path)
+    print(f"Loaded {len(df)} rows from Excel.")
 
     # Import accounts
-    for _, row in df.iterrows():
+    added = 0
+    for idx, row in df.iterrows():
         account = Account(
             account_number=row["Account Number"],
             account_name=row["Account Name"],
@@ -335,12 +345,20 @@ def import_excel_to_db(excel_path, district_code, district_name=None):
             district_id=district.id,
         )
         db.session.add(account)
+        added += 1
+        if added % 100 == 0:
+            print(f"Processed {added} accounts...")
 
     db.session.commit()
+    print(
+        f"Import complete. {added} accounts added to district '{district.name}' ({district.code})."
+    )
 
 
-import_excel_to_db(
-    excel_path="../datasets/WEMD_CL_250527.xlsx",
-    district_code="WEMD",
-    district_name="Waters Edge",
-)
+if __name__ == "__main__":
+    # Import data from Excel to database
+    import_excel_to_db(
+        excel_path="../datasets/WEMD_CL_250527.xlsx",
+        district_code="WEMD",
+        district_name="Waters Edge",
+    )
