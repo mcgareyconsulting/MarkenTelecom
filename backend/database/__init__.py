@@ -18,6 +18,14 @@ def init_db(app):
     print("Using database:", app.config["SQLALCHEMY_DATABASE_URI"])
 
     # Import models to ensure they're registered with SQLAlchemy
-    from database.models import ViolationReport, Violation, ViolationImage
+    from database.models import (
+        ViolationReport,
+        Violation,
+        ViolationImage,
+        District,
+        Account,
+        AccountHistory,
+        ContactPreference,
+    )
 
     return db

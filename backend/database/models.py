@@ -337,3 +337,10 @@ def import_excel_to_db(excel_path, district_code, district_name=None):
         db.session.add(account)
 
     db.session.commit()
+
+
+import_excel_to_db(
+    excel_path="../datasets/WEMD_CL_250527.xlsx",
+    district_code="WEMD",
+    district_name="Waters Edge",
+)
