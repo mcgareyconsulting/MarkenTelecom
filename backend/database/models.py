@@ -331,17 +331,17 @@ def import_excel_to_db(excel_path, district_code, district_name=None):
     added = 0
     for idx, row in df.iterrows():
         account = Account(
-            account_number=row["Account Number"],
-            account_name=row["Account Name"],
-            lot_number=row["Lot Number"],
-            move_in_date=row["Move In Date"],
-            address_type=row["Address Type"],
-            service_address=row["ServiceAddress"],
-            service_city_st_zip=row["SvcCitySTZip"],
-            mail_address=row["MailAddress"],
-            mail_city_st_zip=row["MailCitySTZip"],
-            email=row["Email"],
-            ebill_username=row["EBill Username"],
+            account_number=clean_value(row["Account Number"]),
+            account_name=clean_value(row["Account Name"]),
+            lot_number=clean_value(row["Lot Number"]),
+            move_in_date=clean_value(row["Move In Date"]),
+            address_type=clean_value(row["Address Type"]),
+            service_address=clean_value(row["ServiceAddress"]),
+            service_city_st_zip=clean_value(row["SvcCitySTZip"]),
+            mail_address=clean_value(row["MailAddress"]),
+            mail_city_st_zip=clean_value(row["MailCitySTZip"]),
+            email=clean_value(row["Email"]),
+            ebill_username=clean_value(row["EBill Username"]),
             district_id=district.id,
         )
         db.session.add(account)
@@ -353,3 +353,16 @@ def import_excel_to_db(excel_path, district_code, district_name=None):
     print(
         f"Import complete. {added} accounts added to district '{district.name}' ({district.code})."
     )
+
+
+def clean_value(val):
+    """
+    Pandas to SQLAlchemy conversion helper function.
+    """
+    import math
+
+    if val is None:
+        return None
+    if isinstance(val, float) and math.isnan(val):
+        return None
+    return val
