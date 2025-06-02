@@ -45,13 +45,13 @@ def normalize_address(addr):
 
 
 # Collect and compare address from collected data and homeowner data
-def join_on_district_address():
+def violation_match(district):
     """
     Function to join district data with homeowner data based on address.
     This function is a placeholder for future implementation.
     """
 
-    district_name = "mountain_sky"
+    district_name = district_name
     print(f"Collecting addresses for {district_name}...")
 
     district = District.query.filter_by(name=district_name).first()
@@ -103,6 +103,22 @@ def join_on_district_address():
 
     # iterate through all violation_reports in the database with district = highlands_mead
     # and join with homeowner data based on address
+
+
+# Collect data package for matched violations
+def collect_violation_data(district):
+    """
+    Function to collect violation data for Highland Mead district.
+    This function is a placeholder for future implementation.
+    """
+
+    # Collect violation matches for district
+    violation_match(district)
+
+    #
+    # Placeholder for Highland Mead data
+    # This would typically be fetched from a database or an API
+    # For now, we will use a hardcoded dictionary
 
 
 # highland_mead_data = {
