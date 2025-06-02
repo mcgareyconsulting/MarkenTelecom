@@ -6,8 +6,9 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import json
 import uuid
+from datetime import datetime
 
-from letter_generation import generate_pdfs
+# from letter_generation import generate_pdfs
 from database import db, init_db
 from database.models import (
     ViolationReport,
@@ -159,6 +160,12 @@ def get_violation_list():
 @app.route("/api/violations", methods=["POST"])
 def create_violation_report():
     """Create a new violation report with images"""
+
+    # temporary backdate for Muegge Farms data
+    backdate = (
+        datetime(2025, 5, 30, 20, 58, 55, 211029),
+    )  # 2025-05-30 20:58:55.211029
+
     try:
         # Ensure form data is present
         if not request.form or "data" not in request.form:
@@ -191,6 +198,7 @@ def create_violation_report():
             state=address["state"],
             zip_code=address["zip"],
             district=address["district"],
+            created_at=backdate,  # Use backdated timestamp
         )
 
         db.session.add(report)
@@ -202,6 +210,7 @@ def create_violation_report():
                 report_id=report.id,
                 violation_type=violation_data.get("type", ""),
                 notes=violation_data.get("notes", ""),
+                created_at=backdate,  # Use backdated timestamp
             )
             db.session.add(violation)
             db.session.flush()  # Get the violation ID
@@ -226,6 +235,7 @@ def create_violation_report():
                         file_path=filepath,
                         file_size=os.path.getsize(filepath),
                         mime_type=file.mimetype or "application/octet-stream",
+                        uploaded_at=backdate,  # Use backdated timestamp
                     )
                     db.session.add(violation_image)
 

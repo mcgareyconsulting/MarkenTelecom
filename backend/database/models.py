@@ -6,6 +6,9 @@ from database import db
 from datetime import datetime
 from typing import Dict, Any
 
+# temporary backdate for Muegge Farms data
+backdate = datetime(2025, 5, 30, 20, 58, 55, 211029)  # 2025-05-30 20:58:55.211029
+
 
 class ViolationReport(db.Model):
     """Main violation report model"""
