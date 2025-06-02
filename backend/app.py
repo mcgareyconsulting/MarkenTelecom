@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import json
 import uuid
 from datetime import datetime
+from letter_generation import join_on_district_address
 
 # from letter_generation import generate_pdfs
 from database import db, init_db
@@ -71,10 +72,10 @@ app = create_app()
 # with app.app_context():
 #     try:
 #         import_excel_to_db(
-#             excel_path="../datasets/WEMD_CL_250527.xlsx",
-#             district_code="WEMD",
-#             district_name="waters_edge",
-#             district_label="Waters Edge",
+#             excel_path="../datasets/MSMD_CL_250602_partial.xlsx",
+#             district_code="MSMD",
+#             district_name="mountain_sky",
+#             district_label="Mountain Sky",
 #         )
 #         print("✅ Dataset imported successfully!")
 #     except Exception as e:
@@ -291,4 +292,9 @@ def internal_error(e):
 
 if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
+
+    # run join on district and address
+    with app.app_context():
+        join_on_district_address()
+
     app.run(debug=debug_mode, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

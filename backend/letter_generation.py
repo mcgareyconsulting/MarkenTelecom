@@ -2,10 +2,46 @@ import pandas as pd
 import os
 from pdf_generator.generate_pdf import ViolationNoticePDF
 import re
+from database.models import District, Account, ViolationReport
 from docx import Document
 from docx.shared import Inches, Pt
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+
+
+# Normalize address lookup
+import re
+
+
+def normalize_address(addr):
+    if not addr:
+        return ""
+    addr = addr.strip().lower()
+    # Remove punctuation (periods, commas, etc.)
+    addr = re.sub(r"[.,]", "", addr)
+    # Collapse multiple spaces
+    addr = re.sub(r"\s+", " ", addr)
+    # Replace common street suffixes with abbreviations
+    suffix_map = {
+        " street": " st",
+        " avenue": " ave",
+        " boulevard": " blvd",
+        " drive": " dr",
+        " road": " rd",
+        " lane": " ln",
+        " court": " ct",
+        " place": " pl",
+        " trail": " trl",
+        " parkway": " pkwy",
+        " circle": " cir",
+        " terrace": " ter",
+        " way": " way",
+    }
+    for long, short in suffix_map.items():
+        if addr.endswith(long):
+            addr = addr[: -len(long)] + short
+        addr = addr.replace(long + " ", short + " ")
+    return addr
 
 
 # Collect and compare address from collected data and homeowner data
@@ -14,7 +50,56 @@ def join_on_district_address():
     Function to join district data with homeowner data based on address.
     This function is a placeholder for future implementation.
     """
-    district = "highlands_mead"
+
+    district_name = "mountain_sky"
+    print(f"Collecting addresses for {district_name}...")
+
+    district = District.query.filter_by(name=district_name).first()
+
+    if not district:
+        print(f"District '{district_name}' not found in the database.")
+        return
+    else:
+        # Get all accounts in this district
+        accounts = Account.query.filter_by(district_id=district.id).all()
+
+        # Get all violation reports in this district
+        violation_reports = ViolationReport.query.filter_by(
+            district=district_name
+        ).all()
+
+        # Create account lookup by normalized address
+        account_lookup = {normalize_address(a.service_address): a for a in accounts}
+
+        # debug counter
+        counter = 0
+        # Cross-reference violation reports with accounts by address
+        for report in violation_reports:
+            addr_key = normalize_address(report.address_line1)
+            account = account_lookup.get(addr_key)
+
+            print(f"Checking report address: {report.address_line1} -> {addr_key}")
+            print(f"Found account: {account}")
+
+            if account:
+                counter += 1
+                print(
+                    {
+                        "violation_report_id": report.id,
+                        "property_address": report.address_line1,
+                        "service address": account.service_address,
+                        "homeowner_name": account.account_name,
+                        "mailing_address": account.mail_address,
+                        "mailing_city_st_zip": account.mail_city_st_zip,
+                        "email": account.email,
+                    }
+                )
+            else:
+                print(
+                    f"No account found for violation report address: {report.address_line1}"
+                )
+
+    print(f"Total matches found: {counter}")
 
     # iterate through all violation_reports in the database with district = highlands_mead
     # and join with homeowner data based on address
