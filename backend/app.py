@@ -7,7 +7,10 @@ from dotenv import load_dotenv
 import json
 import uuid
 from datetime import datetime
-from letter_generation import collect_violation_data_for_pdf
+from letter_generation import (
+    ViolationDataCollector,
+    PDFGenerator,
+)
 
 # from letter_generation import generate_pdfs
 from database import db, init_db
@@ -21,7 +24,8 @@ from database.models import (
     ContactPreference,
     import_excel_to_db,
 )
-from utils.violation_codes import get_violation_titles_for_district
+
+# from utils.violation_codes import get_violation_titles_for_district
 
 # Load environment variables from .env file
 load_dotenv()
@@ -140,22 +144,22 @@ def autocomplete():
     return jsonify(results)
 
 
-@app.route("/api/violations_list_per_district", methods=["GET"])
-def get_violation_list():
-    """
-    API endpoint to get violation titles for a given district.
-    Usage: /api/violation_titles?district=waters_edge
-    """
-    district = request.args.get("district")
-    if not district:
-        return jsonify({"error": "Missing district parameter"}), 400
+# @app.route("/api/violations_list_per_district", methods=["GET"])
+# def get_violation_list():
+#     """
+#     API endpoint to get violation titles for a given district.
+#     Usage: /api/violation_titles?district=waters_edge
+#     """
+#     district = request.args.get("district")
+#     if not district:
+#         return jsonify({"error": "Missing district parameter"}), 400
 
-    try:
-        titles = get_violation_titles_for_district(district)
-        return jsonify({"titles": titles})
-    except Exception as e:
-        print(f"Error fetching violation titles: {e}")
-        return jsonify({"error": "Failed to fetch violation titles"}), 500
+#     try:
+#         titles = get_violation_titles_for_district(district)
+#         return jsonify({"titles": titles})
+#     except Exception as e:
+#         print(f"Error fetching violation titles: {e}")
+#         return jsonify({"error": "Failed to fetch violation titles"}), 500
 
 
 @app.route("/api/violations", methods=["POST"])
@@ -295,6 +299,11 @@ if __name__ == "__main__":
 
     # run join on district and address
     with app.app_context():
-        collect_violation_data_for_pdf("highlands_mead")
+        # New object-oriented approach (recommended)
+        collector = ViolationDataCollector("highlands_mead")
+        pdf_data = collector.collect_violation_data()
+        print(f"Collected {len(pdf_data)} violation records for PDF generation.")
+        # print(pdf_data)
+        PDFGenerator.generate_pdfs(pdf_data)
 
     app.run(debug=debug_mode, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

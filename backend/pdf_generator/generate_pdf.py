@@ -310,9 +310,7 @@ class ViolationNoticePDF:
             "notice_date",
             "homeowner_name",
             "homeowner_address_line1",
-            "homeowner_city",
-            "homeowner_state",
-            "homeowner_zip",
+            "homeowner_city_st_zip",
             "property_address",
             "violation_type",
             "violation_image_path",
@@ -370,7 +368,7 @@ class ViolationNoticePDF:
         # Recipient information
         recipient_info = f"""{data['homeowner_name']}<br/>
                           {data['homeowner_address_line1']}<br/>
-                          {data['homeowner_city']}, {data['homeowner_state']} {data['homeowner_zip']}"""
+                          {data['homeowner_city_st_zip']}"""
 
         # Add second address line if available
         if "homeowner_address_line2" in data and data["homeowner_address_line2"]:
