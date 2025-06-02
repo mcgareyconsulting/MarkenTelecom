@@ -162,9 +162,7 @@ def create_violation_report():
     """Create a new violation report with images"""
 
     # temporary backdate for Muegge Farms data
-    backdate = (
-        datetime(2025, 5, 30, 20, 58, 55, 211029),
-    )  # 2025-05-30 20:58:55.211029
+    backdate = datetime(2025, 5, 30, 20, 58, 55, 211029)  # 2025-05-30 20:58:55.211029
 
     try:
         # Ensure form data is present
