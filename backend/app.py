@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import json
 import uuid
 from datetime import datetime
-from letter_generation import violation_match
+from letter_generation import collect_violation_data_for_pdf
 
 # from letter_generation import generate_pdfs
 from database import db, init_db
@@ -295,6 +295,6 @@ if __name__ == "__main__":
 
     # run join on district and address
     with app.app_context():
-        violation_match()
+        collect_violation_data_for_pdf("highlands_mead")
 
     app.run(debug=debug_mode, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
