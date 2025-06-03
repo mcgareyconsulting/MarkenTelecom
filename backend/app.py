@@ -324,9 +324,11 @@ if __name__ == "__main__":
     with app.app_context():
         # New object-oriented approach (recommended)
         collector = ViolationDataCollector("muegge_farms")
-        pdf_data = collector.collect_violation_data()
-        print(f"Collected {len(pdf_data)} violation records for PDF generation.")
+        consolidated_data = collector.collect_violation_data()
+        print(
+            f"Collected {len(consolidated_data)} violation records for PDF generation."
+        )
         # print(pdf_data)
-        PDFGenerator.generate_pdfs(pdf_data)
+        PDFGenerator.generate_consolidated_pdfs(consolidated_data)
 
     app.run(debug=debug_mode, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
