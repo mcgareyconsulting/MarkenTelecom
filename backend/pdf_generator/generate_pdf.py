@@ -13,7 +13,7 @@ from reportlab.platypus import (
 from reportlab.lib.units import inch
 from datetime import datetime
 import os
-from PIL import Image as PILImage, ExifTags
+from PIL import Image as PILImage, ExifTags, ImageEnhance, ImageFilter
 import io
 import requests
 
@@ -192,10 +192,20 @@ class ViolationNoticePDF:
         # Fallback
         return str(date_value)
 
-    def _fetch_and_prepare_image(self, image_url, max_width=180, max_height=240):
+    def _fetch_and_prepare_image(
+        self, image_url, max_width=180, max_height=240, quality=95, sharpen_factor=1.3
+    ):
         """
-        Fetch image from URL, apply EXIF orientation, scale to fit max dimensions,
+        Fetch image from URL, apply EXIF orientation, convert to sRGB,
+        scale to fit max dimensions with high quality, apply sharpening,
         and return ReportLab Image flowable.
+
+        Args:
+            image_url (str): URL of the image to fetch
+            max_width (int): Maximum width for the resized image
+            max_height (int): Maximum height for the resized image
+            quality (int): Quality setting for image saving (1-100)
+            sharpen_factor (float): Amount of sharpening to apply (1.0 = no change)
         """
         try:
             # Fetch image bytes
@@ -205,6 +215,10 @@ class ViolationNoticePDF:
 
             # Open with PIL for processing
             pil_img = PILImage.open(io.BytesIO(img_data))
+
+            # Convert to RGB if image is in CMYK or other color modes
+            if pil_img.mode != "RGB":
+                pil_img = pil_img.convert("RGB")
 
             # Apply EXIF orientation (fix rotation for mobile photos)
             try:
@@ -224,18 +238,43 @@ class ViolationNoticePDF:
                 # No EXIF or no orientation tag, ignore silently
                 pass
 
-            # Scale while keeping aspect ratio
+            # Get original dimensions
             width, height = pil_img.size
+
+            # Calculate scaling ratio while preserving aspect ratio
             ratio = min(max_width / width, max_height / height, 1)  # don't upscale
 
+            # Calculate new dimensions
             new_width = int(width * ratio)
             new_height = int(height * ratio)
 
-            pil_img = pil_img.resize((new_width, new_height), PILImage.LANCZOS)
+            # For large downscaling, use a two-step resize process for better quality
+            if width > new_width * 2 or height > new_height * 2:
+                # First resize to an intermediate size
+                intermediate_width = int(new_width * 1.5)
+                intermediate_height = int(new_height * 1.5)
+                intermediate_img = pil_img.resize(
+                    (intermediate_width, intermediate_height), PILImage.LANCZOS
+                )
+                # Then resize to final size
+                pil_img = intermediate_img.resize(
+                    (new_width, new_height), PILImage.LANCZOS
+                )
+            else:
+                # Single-step resize for smaller reductions
+                pil_img = pil_img.resize((new_width, new_height), PILImage.LANCZOS)
 
-            # Save back to bytes buffer
+            # Apply a slight unsharp mask to enhance details
+            if sharpen_factor > 1.0:
+                # First apply a subtle gaussian blur
+                pil_img = pil_img.filter(ImageFilter.GaussianBlur(radius=0.5))
+                # Then apply sharpening
+                enhancer = ImageEnhance.Sharpness(pil_img)
+                pil_img = enhancer.enhance(sharpen_factor)
+
+            # Save to PNG format for best quality
             output_buffer = io.BytesIO()
-            pil_img.save(output_buffer, format="PNG")
+            pil_img.save(output_buffer, format="PNG", optimize=True)
             output_buffer.seek(0)
 
             # Create ReportLab Image flowable
@@ -290,12 +329,6 @@ class ViolationNoticePDF:
             )
         else:
             print(f"Homeowner {data['homeowner_name']} does not have an email address.")
-            content.append(
-                Paragraph(
-                    "No email address provided for homeowner.",
-                    self.styles["PropertyInfo"],
-                )
-            )
 
         # Property information
         content.append(
@@ -324,30 +357,26 @@ class ViolationNoticePDF:
 
     def _add_violation_content(self, violation_data, content, violation_number=None):
         """Add a single violation's content to the PDF"""
+
+        # Collect regulation information
+        regulation = violation_data["regulation"]
+
         # Add violation header with number if provided
         if violation_number is not None:
             content.append(
                 Paragraph(
-                    f"Violation {violation_number}: {violation_data['violation_type']}",
+                    f"Violation {violation_number}: {regulation['title']}",
                     self.styles["ViolationHeader"],
                 )
             )
         else:
             content.append(
                 Paragraph(
-                    f"Violation: {violation_data['violation_type']}",
+                    f"Violation: {regulation['title']}",
                     self.styles["ViolationHeader"],
                 )
             )
 
-        # Add regulation information
-        regulation = violation_data["regulation"]
-        content.append(
-            Paragraph(
-                f"{regulation['title']}",
-                self.styles["RegulationCode"],
-            )
-        )
         content.append(
             Paragraph(regulation["description"], self.styles["RegulationText"])
         )
@@ -469,39 +498,14 @@ class ViolationNoticePDF:
 
     def generate_pdf(self, data):
         """
-        Generate a PDF violation notice using the provided data.
-        This method is maintained for backward compatibility.
-        For multiple violations, use generate_consolidated_pdf instead.
+        Generate a PDF notice for a single violation.
 
         Args:
-            data (dict): Dictionary containing all required fields for the PDF
+            data (dict): Violation data dictionary
 
         Returns:
             str: Path to the generated PDF file
         """
-        # Ensure all required fields are present
-        required_fields = [
-            "district_name",
-            "notice_date",
-            "homeowner_name",
-            "mailing_address",
-            "mailing_city_st_zip",
-            "property_address",
-            "violation_type",
-            "violation_images",
-            "regulation",
-        ]
-
-        for field in required_fields:
-            if field not in data:
-                raise ValueError(f"Missing required field: {field}")
-
-        # Check regulation dictionary structure
-        regulation_fields = ["title", "description"]
-        for field in regulation_fields:
-            if field not in data["regulation"]:
-                raise ValueError(f"Missing regulation field: {field}")
-
         # Generate a filename based on property address and date
         safe_address = (
             data["property_address"].replace(" ", "_").replace(",", "").replace(".", "")
@@ -526,7 +530,7 @@ class ViolationNoticePDF:
         # Add header content
         content = self._add_header_content(data, content)
 
-        # Add violation content (without numbering for single violations)
+        # Add violation content
         content = self._add_violation_content(data, content)
 
         # Add footer content
