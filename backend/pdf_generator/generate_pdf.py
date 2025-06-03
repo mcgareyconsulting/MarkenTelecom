@@ -12,7 +12,7 @@ from reportlab.platypus import (
 from reportlab.lib.units import inch
 from datetime import datetime
 import os
-from PIL import Image as PILImage
+from PIL import Image as PILImage, ExifTags
 import io
 import requests
 
@@ -183,99 +183,57 @@ class ViolationNoticePDF:
         # Fallback
         return str(date_value)
 
-    def _process_image_with_exif(
-        self, image_path, max_width=5.5 * inch, max_height=4 * inch
-    ):
+    def _fetch_and_prepare_image(self, image_url, max_width=300, max_height=450):
         """
-        Process an image with EXIF orientation data and return properly oriented image data
-        with appropriate dimensions for the PDF.
-
-        Args:
-            image_path: Path to the image file
-            max_width: Maximum width for the image in the PDF
-            max_height: Maximum height for the image in the PDF
-
-        Returns:
-            tuple: (image_data, width, height) where image_data is bytes and width/height are in points
+        Fetch image from URL, apply EXIF orientation, scale to fit max dimensions,
+        and return ReportLab Image flowable.
         """
+
+        # Fetch image bytes
+        response = requests.get(image_url)
+        response.raise_for_status()
+        img_data = response.content
+
+        # Open with PIL for processing
+        pil_img = PILImage.open(io.BytesIO(img_data))
+
+        # Apply EXIF orientation (fix rotation for mobile photos)
         try:
-            # Open the image and apply EXIF orientation
-            with PILImage.open(image_path) as img:
-                # Check if the image has EXIF data
-                exif = None
-                if hasattr(img, "_getexif") and img._getexif() is not None:
-                    exif = dict(img._getexif().items())
+            for orientation in ExifTags.TAGS.keys():
+                if ExifTags.TAGS[orientation] == "Orientation":
+                    break
+            exif = pil_img._getexif()
+            if exif is not None:
+                orientation_value = exif.get(orientation)
+                if orientation_value == 3:
+                    pil_img = pil_img.rotate(180, expand=True)
+                elif orientation_value == 6:
+                    pil_img = pil_img.rotate(270, expand=True)
+                elif orientation_value == 8:
+                    pil_img = pil_img.rotate(90, expand=True)
+        except Exception:
+            # No EXIF or no orientation tag, ignore silently
+            pass
 
-                # Apply orientation based on EXIF data if available
-                if exif and 274 in exif:  # 274 is the EXIF orientation tag
-                    orientation = exif[274]
+        # Scale while keeping aspect ratio
+        width, height = pil_img.size
+        ratio = min(max_width / width, max_height / height, 1)  # don't upscale
 
-                    # Apply rotation based on orientation
-                    if orientation == 2:
-                        img = img.transpose(PILImage.FLIP_LEFT_RIGHT)
-                    elif orientation == 3:
-                        img = img.rotate(180, expand=True)
-                    elif orientation == 4:
-                        img = img.rotate(180, expand=True).transpose(
-                            PILImage.FLIP_LEFT_RIGHT
-                        )
-                    elif orientation == 5:
-                        img = img.rotate(-90, expand=True).transpose(
-                            PILImage.FLIP_LEFT_RIGHT
-                        )
-                    elif orientation == 6:
-                        img = img.rotate(-90, expand=True)
-                    elif orientation == 7:
-                        img = img.rotate(90, expand=True).transpose(
-                            PILImage.FLIP_LEFT_RIGHT
-                        )
-                    elif orientation == 8:
-                        img = img.rotate(90, expand=True)
+        new_width = int(width * ratio)
+        new_height = int(height * ratio)
 
-                # Force portrait orientation for mobile photos if height > width
-                img_width, img_height = img.size
-                if img_height > img_width:
-                    # Already in portrait orientation, no need to rotate
-                    pass
+        pil_img = pil_img.resize((new_width, new_height), PILImage.LANCZOS)
 
-                # Calculate aspect ratio
-                aspect_ratio = img_width / img_height
+        # Save back to bytes buffer
+        output_buffer = io.BytesIO()
+        pil_img.save(output_buffer, format="PNG")
+        output_buffer.seek(0)
 
-                # Determine if image is portrait or landscape after any rotation
-                is_portrait = img_height > img_width
+        # Create ReportLab Image flowable
+        reportlab_img = Image(output_buffer, width=new_width, height=new_height)
+        reportlab_img.hAlign = "CENTER"
 
-                if is_portrait:
-                    # For portrait images, limit height and calculate width
-                    # Use a smaller max_height for portrait to avoid excessive page usage
-                    portrait_max_height = 3.5 * inch
-                    new_height = min(portrait_max_height, max_height)
-                    new_width = new_height * aspect_ratio
-
-                    # If width is still too large, scale down further
-                    if new_width > max_width:
-                        new_width = max_width
-                        new_height = new_width / aspect_ratio
-                else:
-                    # For landscape images, limit width and calculate height
-                    new_width = min(max_width, max_width)
-                    new_height = new_width / aspect_ratio
-
-                    # If height is still too large, scale down further
-                    if new_height > max_height:
-                        new_height = max_height
-                        new_width = new_height * aspect_ratio
-
-                # Save the processed image to a bytes buffer
-                img_buffer = io.BytesIO()
-                img.save(img_buffer, format=img.format or "JPEG")
-                img_data = img_buffer.getvalue()
-
-                return img_data, new_width, new_height
-
-        except Exception as e:
-            # If there's an error processing the image, return the original path and default dimensions
-            print(f"Error processing image with EXIF: {e}")
-            return None, max_width, max_height
+        return reportlab_img
 
     def generate_pdf(self, data):
         """
@@ -407,7 +365,7 @@ class ViolationNoticePDF:
             )
 
         # Letter content
-        letter_content = f"""One of the primary responsibilities of {data['district_name']} ("the District") is to protect the aesthetic appeal and property values
+        letter_content = f"""One of the primary responsibilities of {data['district_label']} ("the District") is to protect the aesthetic appeal and property values
         of the neighborhood. To accomplish this, certain Covenants and Design Guidelines have
         been established by which homeowners and residents must abide. During a recent
         inspection a concern was noted regarding your property and the District is asking for your
@@ -429,28 +387,14 @@ class ViolationNoticePDF:
         # Add violation image with EXIF orientation handling
         violation_image = data["violation_images"][0]  # Simplified for one image
 
-        image_url = violation_image[
-            "file_path"
-        ]  # this should now be the Cloudinary URL
+        print(f"Processing image: {violation_image['file_path']}")
 
         try:
-            response = requests.get(image_url)
-            response.raise_for_status()
-            print("Image successfully fetched from Cloudinary")
-
-            # Optional: process EXIF here if needed
-            img_data = response.content
-            img_width, img_height = self._get_image_dimensions(
-                img_data
-            )  # You need this helper
-
-            img = Image(io.BytesIO(img_data), width=img_width, height=img_height)
-            img.hAlign = "CENTER"
+            img = self._fetch_and_prepare_image(violation_image["file_path"])
             content.append(img)
             content.append(Paragraph("Violation Image", self.styles["ImageCaption"]))
-
         except Exception as e:
-            print(f"Failed to fetch image: {e}")
+            print(f"Failed to fetch or process image: {e}")
             content.append(
                 Paragraph("No violation image available.", self.styles["ImageCaption"])
             )
