@@ -192,7 +192,7 @@ class ViolationNoticePDF:
         # Fallback
         return str(date_value)
 
-    def _fetch_and_prepare_image(self, image_url, max_width=300, max_height=400):
+    def _fetch_and_prepare_image(self, image_url, max_width=180, max_height=240):
         """
         Fetch image from URL, apply EXIF orientation, scale to fit max dimensions,
         and return ReportLab Image flowable.
@@ -279,9 +279,20 @@ class ViolationNoticePDF:
 
         # Email if available
         if "homeowner_email" in data and data["homeowner_email"]:
+            print(
+                f"Homeowner {data['homeowner_name']} has email: {data['homeowner_email']}"
+            )
             content.append(
                 Paragraph(
                     f"Sent Via Email: {data['homeowner_email']}",
+                    self.styles["PropertyInfo"],
+                )
+            )
+        else:
+            print(f"Homeowner {data['homeowner_name']} does not have an email address.")
+            content.append(
+                Paragraph(
+                    "No email address provided for homeowner.",
                     self.styles["PropertyInfo"],
                 )
             )
