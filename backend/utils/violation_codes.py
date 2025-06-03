@@ -30,5 +30,47 @@ violations = {
             "violation_name": "Unsightly Conditions",
             "description": """No unsightly articles or conditions shall be permitted to remain or accumulate on any Lot. By way of example, but not limitation, such items could include rock or mulch piles, construction materials, abandoned toys, inoperable vehicles, dead or dying landscaping, peeling or faded paint, gardening equipment not in actual use, fencing in disrepair, etc. Gravel, rock mulch, bark mulch, timbers, block, or other types of bulk landscaping material or construction material must be installed on the Lot or moved to a location not visible from the street within 14 days of delivery.""",
         },
-    }
+    },
+    "muegge_farms": {
+        "weeds": {
+            "title": "General Landscape - Maintenance",
+            "code_number": "",
+            "violation_name": "Weeds",
+            "description": """Landscaped areas shall be kept in a well-maintained, safe, clean, and attractive condition at all times. This includes:
+• Landscaped areas shall be kept free of trash, litter, weeds, and other such materials or plants not part of the landscape.
+• All live plant material shall be maintained in a healthy and growing condition and must be replaced with live plant material of similar variety and size.
+• The owner or tenants shall provide all regular and normal maintenance of landscaping including weeding, irrigation, fertilization, pruning and mowing, unless maintenance is provided by the District.
+• Grass shall not exceed six (6) inches in height.
+""",
+        },
+        "rv": {
+            "title": "Vehicle Repairs",
+            "code_number": "",
+            "violation_name": "RV",
+            "description": """No Homeowner shall conduct major repairs to any vehicle upon their Residential Site unless performed in a closed garage.""",
+        },
+        "grass": {
+            "title": "General Landscape - Maintenance",
+            "code_number": "",
+            "violation_name": "Grass",
+            "description": """Landscaped areas shall be kept in a well-maintained, safe, clean, and attractive condition at all times. This includes:
+• Landscaped areas shall be kept free of trash, litter, weeds, and other such materials or plants not part of the landscape.
+• All live plant material shall be maintained in a healthy and growing condition and must be replaced with live plant material of similar variety and size.
+• The owner or tenants shall provide all regular and normal maintenance of landscaping including weeding, irrigation, fertilization, pruning and mowing, unless maintenance is provided by the District.
+• Grass shall not exceed six (6) inches in height.
+""",
+        },
+        "trash": {
+            "title": "TRASH/RECYCLE CANS",
+            "code_number": "",
+            "violation_name": "Trash",
+            "description": """• Must be stored in the garage or screened from view of street, common areas and adjacent neighboring properties, behind the fence. Trash and Recycle cans are permitted to be on the street the day before and the day of pickup. All cans must be removed on the day of pickup and stored as designated above.""",
+        },
+        "debris": {
+            "title": "Unsightly Items",
+            "code_number": "",
+            "violation_name": "Debris",
+            "description": """All construction materials and fencing, weeds, rubbish, debris, or unsightly materials or objects of any kind shall be regularly removed from the Residential Sites and shall not be allowed to accumulate thereon. All clotheslines, trash containers, wood piles, storage areas, machinery, and equipment shall be prohibited upon any Residential Site unless obscured from view of adjoining streets, Residential Sites, sidewalks, homes, or District Property.""",
+        },
+    },
 }
