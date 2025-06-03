@@ -1,6 +1,7 @@
 import re
 from database.models import District, Account, ViolationReport
 from pdf_generator.generate_pdf import ViolationNoticePDF
+from utils.violation_codes import violations
 
 
 class AddressNormalizer:
@@ -69,6 +70,21 @@ class ViolationDataCollector:
         """Get all violation reports for the district."""
         return ViolationReport.query.filter_by(district=self.district_name).all()
 
+    def _get_district_regulations(self, district_name, violation_type):
+        """Fetch district regulations for a specific violation type."""
+        # if violation is other then do not return regulation info
+        if violation_type == "other":
+            return {
+                "violation_name": "Other",
+                "title": "Other Violation",
+                "description": "No specific regulation available for this violation type.",
+            }
+        return {
+            "violation_name": violation_type,
+            "title": violations[district_name][violation_type]["title"],
+            "description": violations[district_name][violation_type]["description"],
+        }
+
     def _create_pdf_data_package(self, account, report, violation):
         """Create a complete data package for PDF generation."""
         violation_images = [
@@ -79,6 +95,10 @@ class ViolationDataCollector:
             }
             for image in violation.images
         ]
+
+        regulation_info = self._get_district_regulations(
+            self.district_name, violation.violation_type
+        )
 
         return {
             # District information
@@ -107,6 +127,8 @@ class ViolationDataCollector:
             "violation_notes": violation.notes,
             "violation_date": violation.created_at.strftime("%Y-%m-%d"),
             "violation_images": violation_images,
+            # Regulation information
+            "regulation": regulation_info,
             # Report information
             "report_id": report.id,
             "report_status": report.status,
@@ -135,6 +157,11 @@ class ViolationDataCollector:
 
                 # Process each violation in the report
                 for violation in report.violations:
+
+                    # Skip if violation type is not in the district regulations
+                    if violation.violation_type == "other":
+                        print(f"Skipping 'other' violation for: {report.address_line1}")
+                        continue
                     pdf_data = self._create_pdf_data_package(account, report, violation)
                     pdf_data_batch.append(pdf_data)
 

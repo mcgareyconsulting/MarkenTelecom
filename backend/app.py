@@ -25,10 +25,23 @@ from database.models import (
     import_excel_to_db,
 )
 
+# cloudinary import
+import cloudinary
+import cloudinary.uploader
+from cloudinary.utils import cloudinary_url
+
 # from utils.violation_codes import get_violation_titles_for_district
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Configuration
+cloudinary.config(
+    cloud_name=os.getenv("CLOUD_NAME"),
+    api_key=os.getenv("API_KEY"),
+    api_secret=os.getenv("API_SECRET"),
+    secure=True,
+)
 
 
 def create_app():
@@ -223,24 +236,34 @@ def create_violation_report():
             if image_key in request.files:
                 file = request.files[image_key]
                 if file and file.filename and allowed_file(file.filename):
-                    # Generate unique filename
-                    filename = generate_unique_filename(file.filename)
-                    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                    try:
+                        # Upload to Cloudinary
+                        upload_result = cloudinary.uploader.upload(
+                            file,
+                            folder="violations",
+                            use_filename=True,
+                            unique_filename=True,
+                        )
 
-                    # Save file
-                    file.save(filepath)
+                        # Extract necessary metadata
+                        public_id = upload_result["public_id"]
+                        secure_url = upload_result["secure_url"]
+                        original_filename = file.filename
 
-                    # Create image record
-                    violation_image = ViolationImage(
-                        violation_id=violation.id,
-                        filename=filename,
-                        original_filename=file.filename,
-                        file_path=filepath,
-                        file_size=os.path.getsize(filepath),
-                        mime_type=file.mimetype or "application/octet-stream",
-                        uploaded_at=backdate,  # Use backdated timestamp
-                    )
-                    db.session.add(violation_image)
+                        # Save to your DB
+                        violation_image = ViolationImage(
+                            violation_id=violation.id,
+                            filename=public_id,  # or upload_result["original_filename"]
+                            original_filename=original_filename,
+                            file_path=secure_url,  # this now holds the Cloudinary URL
+                            file_size=upload_result.get("bytes", 0),
+                            mime_type=upload_result.get("resource_type", "image"),
+                            uploaded_at=backdate,
+                        )
+                        db.session.add(violation_image)
+
+                    except Exception as upload_err:
+                        print(f"Cloudinary upload failed: {upload_err}")
 
         # Commit all changes
         db.session.commit()
