@@ -14,6 +14,7 @@ from datetime import datetime
 import os
 from PIL import Image as PILImage
 import io
+import requests
 
 
 class ViolationNoticePDF:
@@ -309,13 +310,11 @@ class ViolationNoticePDF:
             "district_name",
             "notice_date",
             "homeowner_name",
-            "homeowner_address_line1",
-            "homeowner_city",
-            "homeowner_state",
-            "homeowner_zip",
+            "mailing_address",
+            "mailing_city_st_zip",
             "property_address",
             "violation_type",
-            "violation_image_path",
+            "violation_images",
             "regulation",
         ]
 
@@ -324,7 +323,7 @@ class ViolationNoticePDF:
                 raise ValueError(f"Missing required field: {field}")
 
         # Check regulation dictionary structure
-        regulation_fields = ["code", "title", "text"]
+        regulation_fields = ["title", "description"]
         for field in regulation_fields:
             if field not in data["regulation"]:
                 raise ValueError(f"Missing regulation field: {field}")
@@ -351,7 +350,7 @@ class ViolationNoticePDF:
         content = []
 
         # District name (large and blue)
-        content.append(Paragraph(data["district_name"], self.styles["DistrictName"]))
+        content.append(Paragraph(data["district_label"], self.styles["DistrictName"]))
 
         # District address block (standard style)
         district_address_block = """c/o Public Alliance LLC<br/>
@@ -364,17 +363,17 @@ class ViolationNoticePDF:
         content.append(Paragraph("Courtesy Notice", self.styles["NoticeTitle"]))
 
         # Format the date to ensure it's a string
-        formatted_date = self._format_date(data["notice_date"])
+        formatted_date = self._format_date(data["violation_date"])
         content.append(Paragraph(formatted_date, self.styles["Date"]))
 
         # Recipient information
         recipient_info = f"""{data['homeowner_name']}<br/>
-                          {data['homeowner_address_line1']}<br/>
-                          {data['homeowner_city']}, {data['homeowner_state']} {data['homeowner_zip']}"""
+                          {data['mailing_address']}<br/>
+                          {data['mailing_city_st_zip']}"""
 
         # Add second address line if available
-        if "homeowner_address_line2" in data and data["homeowner_address_line2"]:
-            recipient_info += f"<br/>{data['homeowner_address_line2']}"
+        if "mailing_address_line2" in data and data["mailing_address_line2"]:
+            recipient_info += f"<br/>{data['mailing_address_line2']}"
 
         content.append(Paragraph(recipient_info, self.styles["Recipient"]))
 
@@ -393,11 +392,11 @@ class ViolationNoticePDF:
                 f"Property: {data['property_address']}", self.styles["PropertyInfo"]
             )
         )
-        content.append(
-            Paragraph(
-                f"Violation: {data['violation_type']}", self.styles["ViolationInfo"]
-            )
-        )
+        # content.append(
+        #     Paragraph(
+        #         f"Violation: {data['violation_type']}", self.styles["ViolationInfo"]
+        #     )
+        # )
 
         # Salutation if available
         if "homeowner_salutation" in data and data["homeowner_salutation"]:
@@ -419,34 +418,42 @@ class ViolationNoticePDF:
         regulation = data["regulation"]
         content.append(
             Paragraph(
-                f"{regulation['code']} {regulation['title']}",
+                f"{regulation['title']}",
                 self.styles["RegulationCode"],
             )
         )
-        content.append(Paragraph(regulation["text"], self.styles["RegulationText"]))
+        content.append(
+            Paragraph(regulation["description"], self.styles["RegulationText"])
+        )
 
         # Add violation image with EXIF orientation handling
-        if os.path.exists(data["violation_image_path"]):
-            # Process the image with EXIF orientation
-            img_data, img_width, img_height = self._process_image_with_exif(
-                data["violation_image_path"]
-            )
+        violation_image = data["violation_images"][0]  # Simplified for one image
 
-            if img_data:
-                # Create the image from processed data
-                img = Image(io.BytesIO(img_data), width=img_width, height=img_height)
-            else:
-                # Fallback to original path if processing failed
-                img = Image(
-                    data["violation_image_path"], width=img_width, height=img_height
-                )
+        image_url = violation_image[
+            "file_path"
+        ]  # this should now be the Cloudinary URL
 
-            # Center the image
+        try:
+            response = requests.get(image_url)
+            response.raise_for_status()
+            print("Image successfully fetched from Cloudinary")
+
+            # Optional: process EXIF here if needed
+            img_data = response.content
+            img_width, img_height = self._get_image_dimensions(
+                img_data
+            )  # You need this helper
+
+            img = Image(io.BytesIO(img_data), width=img_width, height=img_height)
             img.hAlign = "CENTER"
-
             content.append(img)
             content.append(Paragraph("Violation Image", self.styles["ImageCaption"]))
 
+        except Exception as e:
+            print(f"Failed to fetch image: {e}")
+            content.append(
+                Paragraph("No violation image available.", self.styles["ImageCaption"])
+            )
         content.append(
             Paragraph(
                 """We ask that you remedy this matter within the next 30 days from the date of this letter.
@@ -465,7 +472,7 @@ class ViolationNoticePDF:
 
         # Closing
         content.append(Paragraph("Sincerely,", self.styles["Closing"]))
-        content.append(Paragraph(data["district_name"], self.styles["Signature"]))
+        content.append(Paragraph(data["district_label"], self.styles["Signature"]))
 
         # Build the PDF
         doc.build(content)
