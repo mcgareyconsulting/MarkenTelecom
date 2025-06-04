@@ -61,10 +61,10 @@ violations = {
 """,
         },
         "trash": {
-            "title": "TRASH/RECYCLE CANS",
+            "title": "Trash/Recycle Cans",
             "code_number": "",
             "violation_name": "Trash",
-            "description": """• Must be stored in the garage or screened from view of street, common areas and adjacent neighboring properties, behind the fence. Trash and Recycle cans are permitted to be on the street the day before and the day of pickup. All cans must be removed on the day of pickup and stored as designated above.""",
+            "description": """Must be stored in the garage or screened from view of street, common areas and adjacent neighboring properties, behind the fence. Trash and Recycle cans are permitted to be on the street the day before and the day of pickup. All cans must be removed on the day of pickup and stored as designated above.""",
         },
         "debris": {
             "title": "Unsightly Items",

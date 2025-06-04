@@ -143,8 +143,12 @@ class ViolationDataCollector:
         account_lookup = self._get_accounts_lookup()
         violation_reports = self._get_violation_reports()
 
-        pdf_data_batch = []
+        # Dictionary to group violations by address
+        address_violations = {}
         matches_found = 0
+        processed_violations = (
+            set()
+        )  # Track processed violation IDs to prevent duplicates
 
         for report in violation_reports:
             normalized_address = AddressNormalizer.normalize(report.address_line1)
@@ -154,38 +158,79 @@ class ViolationDataCollector:
 
             if account:
                 matches_found += 1
+                address_key = report.address_line1
 
                 # Process each violation in the report
                 for violation in report.violations:
-
                     # Skip if violation type is not in the district regulations
                     if violation.violation_type == "other":
                         print(f"Skipping 'other' violation for: {report.address_line1}")
                         continue
-                    pdf_data = self._create_pdf_data_package(account, report, violation)
-                    pdf_data_batch.append(pdf_data)
 
+                    # Skip if we've already processed this violation ID
+                    if violation.id in processed_violations:
+                        print(
+                            f"Skipping duplicate violation ID {violation.id} for: {report.address_line1}"
+                        )
+                        continue
+
+                    processed_violations.add(violation.id)
+
+                    pdf_data = self._create_pdf_data_package(account, report, violation)
+
+                    # Add to address_violations dictionary
+                    if address_key not in address_violations:
+                        address_violations[address_key] = []
+
+                    address_violations[address_key].append(pdf_data)
                     print(f"Added: {account.account_name} - {violation.violation_type}")
                     if violation.notes:
                         print(f"Notes: {violation.notes}")
             else:
                 print(f"No account match for: {report.address_line1}")
 
-        # Sort by property address for consistent ordering
-        pdf_data_batch.sort(key=lambda x: x["property_address"])
+        # Convert the dictionary to a list of violation groups
+        consolidated_data = []
+        for address, violations_list in address_violations.items():
+            consolidated_data.append(violations_list)
 
         print(f"Total address matches: {matches_found}")
-        print(f"Total PDF packages created: {len(pdf_data_batch)}")
+        print(f"Total addresses with violations: {len(consolidated_data)}")
+        total_violations = sum(len(violations) for violations in consolidated_data)
+        print(f"Total violations to process: {total_violations}")
 
-        return pdf_data_batch
+        return consolidated_data
 
 
 class PDFGenerator:
     """Handles PDF generation from violation data."""
 
     @staticmethod
+    def generate_consolidated_pdfs(consolidated_data_list):
+        """Generate consolidated PDFs for all addresses with violations."""
+        generated_count = 0
+
+        for violations_list in consolidated_data_list:
+            if not violations_list:
+                continue
+
+            # All violations in this list are for the same address
+            address = violations_list[0].get("property_address", "unknown")
+
+            try:
+                generator = ViolationNoticePDF()
+                pdf_path = generator.generate_consolidated_pdf(violations_list)
+                print(f"Consolidated PDF generated for {address}: {pdf_path}")
+                generated_count += 1
+            except Exception as e:
+                print(f"Error generating consolidated PDF for {address}: {e}")
+
+        print(f"Successfully generated {generated_count} consolidated PDFs")
+        return generated_count
+
+    @staticmethod
     def generate_pdfs(data_list):
-        """Generate PDFs for all violation data packages."""
+        """Generate individual PDFs for all violation data packages (legacy method)."""
         generated_count = 0
 
         for data_dict in data_list:
@@ -234,3 +279,8 @@ def collect_violation_data_for_pdf(district_name):
 def generate_pdfs(data_list):
     """Generate PDFs from violation data list."""
     return PDFGenerator.generate_pdfs(data_list)
+
+
+def generate_consolidated_pdfs(consolidated_data_list):
+    """Generate consolidated PDFs from grouped violation data list."""
+    return PDFGenerator.generate_consolidated_pdfs(consolidated_data_list)

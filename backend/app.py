@@ -214,7 +214,7 @@ def create_violation_report():
             state=address["state"],
             zip_code=address["zip"],
             district=address["district"],
-            created_at=backdate,  # Use backdated timestamp
+            # created_at=backdate,  # Use backdated timestamp
         )
 
         db.session.add(report)
@@ -226,7 +226,7 @@ def create_violation_report():
                 report_id=report.id,
                 violation_type=violation_data.get("type", ""),
                 notes=violation_data.get("notes", ""),
-                created_at=backdate,  # Use backdated timestamp
+                # created_at=backdate,  # Use backdated timestamp
             )
             db.session.add(violation)
             db.session.flush()  # Get the violation ID
@@ -258,7 +258,7 @@ def create_violation_report():
                             file_path=secure_url,  # this now holds the Cloudinary URL
                             file_size=upload_result.get("bytes", 0),
                             mime_type=upload_result.get("resource_type", "image"),
-                            uploaded_at=backdate,
+                            # uploaded_at=backdate, # removing because we do not need to backdate
                         )
                         db.session.add(violation_image)
 
@@ -323,10 +323,12 @@ if __name__ == "__main__":
     # run join on district and address
     with app.app_context():
         # New object-oriented approach (recommended)
-        collector = ViolationDataCollector("highlands_mead")
-        pdf_data = collector.collect_violation_data()
-        print(f"Collected {len(pdf_data)} violation records for PDF generation.")
+        collector = ViolationDataCollector("muegge_farms")
+        consolidated_data = collector.collect_violation_data()
+        print(
+            f"Collected {len(consolidated_data)} violation records for PDF generation."
+        )
         # print(pdf_data)
-        PDFGenerator.generate_pdfs(pdf_data)
+        PDFGenerator.generate_consolidated_pdfs(consolidated_data)
 
     app.run(debug=debug_mode, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

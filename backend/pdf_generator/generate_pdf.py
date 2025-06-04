@@ -8,11 +8,12 @@ from reportlab.platypus import (
     Image,
     Table,
     TableStyle,
+    PageBreak,
 )
 from reportlab.lib.units import inch
 from datetime import datetime
 import os
-from PIL import Image as PILImage, ExifTags
+from PIL import Image as PILImage, ExifTags, ImageEnhance, ImageFilter
 import io
 import requests
 
@@ -143,6 +144,14 @@ class ViolationNoticePDF:
                 leading=12,
             )
         )
+        self.styles.add(
+            ParagraphStyle(
+                name="ViolationHeader",
+                fontName="Helvetica-Bold",
+                fontSize=12,
+                spaceAfter=0.1 * inch,
+            )
+        )
 
     def _format_date(self, date_value):
         """
@@ -183,132 +192,109 @@ class ViolationNoticePDF:
         # Fallback
         return str(date_value)
 
-    def _fetch_and_prepare_image(self, image_url, max_width=300, max_height=450):
+    def _fetch_and_prepare_image(
+        self, image_url, max_width=180, max_height=240, quality=95, sharpen_factor=1.3
+    ):
         """
-        Fetch image from URL, apply EXIF orientation, scale to fit max dimensions,
+        Fetch image from URL, apply EXIF orientation, convert to sRGB,
+        scale to fit max dimensions with high quality, apply sharpening,
         and return ReportLab Image flowable.
-        """
-
-        # Fetch image bytes
-        response = requests.get(image_url)
-        response.raise_for_status()
-        img_data = response.content
-
-        # Open with PIL for processing
-        pil_img = PILImage.open(io.BytesIO(img_data))
-
-        # Apply EXIF orientation (fix rotation for mobile photos)
-        try:
-            for orientation in ExifTags.TAGS.keys():
-                if ExifTags.TAGS[orientation] == "Orientation":
-                    break
-            exif = pil_img._getexif()
-            if exif is not None:
-                orientation_value = exif.get(orientation)
-                if orientation_value == 3:
-                    pil_img = pil_img.rotate(180, expand=True)
-                elif orientation_value == 6:
-                    pil_img = pil_img.rotate(270, expand=True)
-                elif orientation_value == 8:
-                    pil_img = pil_img.rotate(90, expand=True)
-        except Exception:
-            # No EXIF or no orientation tag, ignore silently
-            pass
-
-        # Scale while keeping aspect ratio
-        width, height = pil_img.size
-        ratio = min(max_width / width, max_height / height, 1)  # don't upscale
-
-        new_width = int(width * ratio)
-        new_height = int(height * ratio)
-
-        pil_img = pil_img.resize((new_width, new_height), PILImage.LANCZOS)
-
-        # Save back to bytes buffer
-        output_buffer = io.BytesIO()
-        pil_img.save(output_buffer, format="PNG")
-        output_buffer.seek(0)
-
-        # Create ReportLab Image flowable
-        reportlab_img = Image(output_buffer, width=new_width, height=new_height)
-        reportlab_img.hAlign = "CENTER"
-
-        return reportlab_img
-
-    def generate_pdf(self, data):
-        """
-        Generate a PDF violation notice using the provided data.
 
         Args:
-            data (dict): Dictionary containing all required fields for the PDF
-                Required keys:
-                - district_name: Name of the metropolitan district
-                - district_address_line1: First line of district address
-                - district_address_line2: Second line of district address
-                - district_phone: District phone number
-                - notice_date: Date of the notice (can be string, datetime, or pandas Timestamp)
-                - homeowner_name: Full name of the homeowner
-                - homeowner_address_line1: First line of homeowner address
-                - homeowner_address_line2: City, state, zip of homeowner (optional)
-                - homeowner_email: Email address of homeowner (optional)
-                - homeowner_salutation: Salutation for the letter (optional)
-                - property_address: Address of the property in violation
-                - violation_type: Type of violation
-                - violation_image_path: Path to the image showing the violation
-                - regulation: Dictionary containing regulation information with keys:
-                  - code: Regulation code (e.g., "2.26")
-                  - title: Regulation title (e.g., "Landscaping")
-                  - text: Full text of the regulation
-
-        Returns:
-            str: Path to the generated PDF file
+            image_url (str): URL of the image to fetch
+            max_width (int): Maximum width for the resized image
+            max_height (int): Maximum height for the resized image
+            quality (int): Quality setting for image saving (1-100)
+            sharpen_factor (float): Amount of sharpening to apply (1.0 = no change)
         """
-        # Ensure all required fields are present
-        required_fields = [
-            "district_name",
-            "notice_date",
-            "homeowner_name",
-            "mailing_address",
-            "mailing_city_st_zip",
-            "property_address",
-            "violation_type",
-            "violation_images",
-            "regulation",
-        ]
+        try:
+            # Fetch image bytes
+            response = requests.get(image_url)
+            response.raise_for_status()
+            img_data = response.content
 
-        for field in required_fields:
-            if field not in data:
-                raise ValueError(f"Missing required field: {field}")
+            # Open with PIL for processing
+            pil_img = PILImage.open(io.BytesIO(img_data))
 
-        # Check regulation dictionary structure
-        regulation_fields = ["title", "description"]
-        for field in regulation_fields:
-            if field not in data["regulation"]:
-                raise ValueError(f"Missing regulation field: {field}")
+            # Convert to RGB if image is in CMYK or other color modes
+            if pil_img.mode != "RGB":
+                pil_img = pil_img.convert("RGB")
 
-        # Generate a filename based on property address and date
-        safe_address = (
-            data["property_address"].replace(" ", "_").replace(",", "").replace(".", "")
-        )
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{safe_address}_{timestamp}.pdf"
-        output_path = os.path.join(self.output_dir, filename)
+            # Apply EXIF orientation (fix rotation for mobile photos)
+            try:
+                for orientation in ExifTags.TAGS.keys():
+                    if ExifTags.TAGS[orientation] == "Orientation":
+                        break
+                exif = pil_img._getexif()
+                if exif is not None:
+                    orientation_value = exif.get(orientation)
+                    if orientation_value == 3:
+                        pil_img = pil_img.rotate(180, expand=True)
+                    elif orientation_value == 6:
+                        pil_img = pil_img.rotate(270, expand=True)
+                    elif orientation_value == 8:
+                        pil_img = pil_img.rotate(90, expand=True)
+            except Exception:
+                # No EXIF or no orientation tag, ignore silently
+                pass
 
-        # Create the PDF document
-        doc = SimpleDocTemplate(
-            output_path,
-            pagesize=letter,
-            rightMargin=0.5 * inch,
-            leftMargin=0.5 * inch,
-            topMargin=0.5 * inch,
-            bottomMargin=0.5 * inch,
-        )
+            # Get original dimensions
+            width, height = pil_img.size
 
-        # Build the content
-        content = []
+            # Calculate scaling ratio while preserving aspect ratio
+            ratio = min(max_width / width, max_height / height, 1)  # don't upscale
 
+            # Calculate new dimensions
+            new_width = int(width * ratio)
+            new_height = int(height * ratio)
+
+            # For large downscaling, use a two-step resize process for better quality
+            if width > new_width * 2 or height > new_height * 2:
+                # First resize to an intermediate size
+                intermediate_width = int(new_width * 1.5)
+                intermediate_height = int(new_height * 1.5)
+                intermediate_img = pil_img.resize(
+                    (intermediate_width, intermediate_height), PILImage.LANCZOS
+                )
+                # Then resize to final size
+                pil_img = intermediate_img.resize(
+                    (new_width, new_height), PILImage.LANCZOS
+                )
+            else:
+                # Single-step resize for smaller reductions
+                pil_img = pil_img.resize((new_width, new_height), PILImage.LANCZOS)
+
+            # Apply a slight unsharp mask to enhance details
+            if sharpen_factor > 1.0:
+                # First apply a subtle gaussian blur
+                pil_img = pil_img.filter(ImageFilter.GaussianBlur(radius=0.5))
+                # Then apply sharpening
+                enhancer = ImageEnhance.Sharpness(pil_img)
+                pil_img = enhancer.enhance(sharpen_factor)
+
+            # Save to PNG format for best quality
+            output_buffer = io.BytesIO()
+            pil_img.save(output_buffer, format="PNG", optimize=True)
+            output_buffer.seek(0)
+
+            # Create ReportLab Image flowable
+            reportlab_img = Image(output_buffer, width=new_width, height=new_height)
+            reportlab_img.hAlign = "CENTER"
+
+            return reportlab_img
+        except Exception as e:
+            print(f"Error processing image: {e}")
+            return None
+
+    def _add_header_content(self, data, content):
+        """Add the header content to the PDF (district info, recipient, etc.)"""
         # District name (large and blue)
-        content.append(Paragraph(data["district_label"], self.styles["DistrictName"]))
+        content.append(
+            Paragraph(
+                f"{data['district_label']} Metropolitan District",
+                self.styles["DistrictName"],
+            )
+        )
 
         # District address block (standard style)
         district_address_block = """c/o Public Alliance LLC<br/>
@@ -337,24 +323,24 @@ class ViolationNoticePDF:
 
         # Email if available
         if "homeowner_email" in data and data["homeowner_email"]:
+            print(
+                f"Homeowner {data['homeowner_name']} has email: {data['homeowner_email']}"
+            )
             content.append(
                 Paragraph(
                     f"Sent Via Email: {data['homeowner_email']}",
                     self.styles["PropertyInfo"],
                 )
             )
+        else:
+            print(f"Homeowner {data['homeowner_name']} does not have an email address.")
 
-        # Property and violation information
+        # Property information
         content.append(
             Paragraph(
                 f"Property: {data['property_address']}", self.styles["PropertyInfo"]
             )
         )
-        # content.append(
-        #     Paragraph(
-        #         f"Violation: {data['violation_type']}", self.styles["ViolationInfo"]
-        #     )
-        # )
 
         # Salutation if available
         if "homeowner_salutation" in data and data["homeowner_salutation"]:
@@ -365,42 +351,66 @@ class ViolationNoticePDF:
             )
 
         # Letter content
-        letter_content = f"""One of the primary responsibilities of {data['district_label']} ("the District") is to protect the aesthetic appeal and property values
+        letter_content = f"""One of the primary responsibilities of {data['district_label']} Metropolitan District ("the District") is to protect the aesthetic appeal and property values
         of the neighborhood. To accomplish this, certain Covenants and Design Guidelines have
         been established by which homeowners and residents must abide. During a recent
-        inspection a concern was noted regarding your property and the District is asking for your
+        inspection the following concerns were noted regarding your property and the District is asking for your
         help in achieving compliance."""
         content.append(Paragraph(letter_content, self.styles["Content"]))
 
-        # Add regulation information
-        regulation = data["regulation"]
-        content.append(
-            Paragraph(
-                f"{regulation['title']}",
-                self.styles["RegulationCode"],
-            )
-        )
-        content.append(
-            Paragraph(regulation["description"], self.styles["RegulationText"])
-        )
+        return content
 
-        # Add violation image with EXIF orientation handling
-        violation_image = data["violation_images"][0]  # Simplified for one image
+    def _add_violation_content(self, violation_data, content, violation_number=None):
+        """Add a single violation's content to the PDF"""
 
-        print(f"Processing image: {violation_image['file_path']}")
+        # Collect regulation information
+        regulation = violation_data["regulation"]
 
-        try:
-            img = self._fetch_and_prepare_image(violation_image["file_path"])
-            content.append(img)
-            content.append(Paragraph("Violation Image", self.styles["ImageCaption"]))
-        except Exception as e:
-            print(f"Failed to fetch or process image: {e}")
+        # Add violation header with number if provided
+        if violation_number is not None:
             content.append(
-                Paragraph("No violation image available.", self.styles["ImageCaption"])
+                Paragraph(
+                    f"Violation {violation_number}: {regulation['title']}",
+                    self.styles["ViolationHeader"],
+                )
             )
+        else:
+            content.append(
+                Paragraph(
+                    f"Violation: {regulation['title']}",
+                    self.styles["ViolationHeader"],
+                )
+            )
+
+        # Dynamically insert newlines before each bullet point for better formatting
+        formatted_description = regulation["description"].replace("•", "<br/>•")
+
+        content.append(Paragraph(formatted_description, self.styles["RegulationText"]))
+
+        # Add violation image if available
+        if (
+            violation_data["violation_images"]
+            and len(violation_data["violation_images"]) > 0
+        ):
+            violation_image = violation_data["violation_images"][0]
+            img = self._fetch_and_prepare_image(violation_image["file_path"])
+            if img:
+                content.append(img)
+                content.append(
+                    Paragraph("Violation Image", self.styles["ImageCaption"])
+                )
+            else:
+                content.append(
+                    Paragraph("Image not available", self.styles["ImageCaption"])
+                )
+
+        return content
+
+    def _add_footer_content(self, data, content):
+        """Add the footer content to the PDF (closing, signature, etc.)"""
         content.append(
             Paragraph(
-                """We ask that you remedy this matter within the next 30 days from the date of this letter.
+                """We ask that you remedy these matters within the next 30 days from the date of this letter.
         Failure to do so may result in potential fines per the governing documents.""",
                 self.styles["Content"],
             )
@@ -408,7 +418,7 @@ class ViolationNoticePDF:
 
         content.append(
             Paragraph(
-                """If you have already resolved the above matter, we thank you for your prompt attention and
+                """If you have already resolved the above matters, we thank you for your prompt attention and
         appreciate your help keeping the neighborhood looking its best.""",
                 self.styles["Content"],
             )
@@ -416,45 +426,128 @@ class ViolationNoticePDF:
 
         # Closing
         content.append(Paragraph("Sincerely,", self.styles["Closing"]))
-        content.append(Paragraph(data["district_label"], self.styles["Signature"]))
+        content.append(
+            Paragraph(
+                f"{data['district_label']} Metropolitan District",
+                self.styles["Signature"],
+            )
+        )
+
+        return content
+
+    def generate_consolidated_pdf(self, violations_data):
+        """
+        Generate a consolidated PDF notice for multiple violations at the same address.
+
+        Args:
+            violations_data (list): List of violation data dictionaries for the same address
+
+        Returns:
+            str: Path to the generated PDF file
+        """
+        if not violations_data or len(violations_data) == 0:
+            raise ValueError("No violation data provided")
+
+        # Use the first violation's data for common information
+        first_data = violations_data[0]
+
+        # Generate a filename based on property address and date
+        safe_address = (
+            first_data["property_address"]
+            .replace(" ", "_")
+            .replace(",", "")
+            .replace(".", "")
+        )
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{safe_address}_{timestamp}.pdf"
+        output_path = os.path.join(self.output_dir, filename)
+
+        # Create the PDF document
+        doc = SimpleDocTemplate(
+            output_path,
+            pagesize=letter,
+            rightMargin=0.5 * inch,
+            leftMargin=0.5 * inch,
+            topMargin=0.5 * inch,
+            bottomMargin=0.5 * inch,
+        )
+
+        # Build the content
+        content = []
+
+        # Add header content (only once)
+        content = self._add_header_content(first_data, content)
+
+        # Create a set to track unique violations by ID to prevent duplicates
+        processed_violations = set()
+
+        # Add each violation with a page break between them
+        for i, violation_data in enumerate(violations_data):
+            # Skip duplicates by checking violation ID
+            violation_id = violation_data.get("violation_id")
+            if violation_id in processed_violations:
+                continue
+
+            processed_violations.add(violation_id)
+
+            # Add page break before violations after the first one
+            if i > 0:
+                content.append(PageBreak())
+
+            # Add the violation content with a number
+            content = self._add_violation_content(
+                violation_data, content, violation_number=i + 1
+            )
+
+        # Add footer content (only once, after the last violation)
+        content = self._add_footer_content(first_data, content)
 
         # Build the PDF
         doc.build(content)
 
         return output_path
 
+    def generate_pdf(self, data):
+        """
+        Generate a PDF notice for a single violation.
 
-def test_template():
-    """Test the template with sample data."""
-    # Create sample data with regulation text
-    sample_data = {
-        "district_name": "Saddler Ridge Metropolitan District",
-        "district_address_line1": "c/o Public Alliance LLC",
-        "district_address_line2": "7555 E. Hampden Ave., Suite 501",
-        "district_phone": "(720) 213-6621",
-        "notice_date": "20-May",
-        "homeowner_name": "Mr. John Doe",
-        "homeowner_address_line1": "123 Sample Street",
-        "homeowner_address_line2": "Anytown, CO 80000",
-        "homeowner_email": "johndoe@example.com",
-        "homeowner_salutation": "Mr. Doe",
-        "property_address": "123 Sample Street, Anytown, CO 80000",
-        "violation_type": "Fence Rails",
-        "violation_image_path": "/home/ubuntu/pdf_analysis/image-002.jpg",
-        "regulation": {
-            "code": "2.26",
-            "title": "Landscaping",
-            "text": "Landscaping must be kept at all times in a neat, healthy, weed-free, and attractive condition.",
-        },
-    }
+        Args:
+            data (dict): Violation data dictionary
 
-    # Generate the PDF
-    generator = ViolationNoticePDF()
-    pdf_path = generator.generate_pdf(sample_data)
+        Returns:
+            str: Path to the generated PDF file
+        """
+        # Generate a filename based on property address and date
+        safe_address = (
+            data["property_address"].replace(" ", "_").replace(",", "").replace(".", "")
+        )
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{safe_address}_{timestamp}.pdf"
+        output_path = os.path.join(self.output_dir, filename)
 
-    print(f"Test PDF generated at: {pdf_path}")
-    return pdf_path
+        # Create the PDF document
+        doc = SimpleDocTemplate(
+            output_path,
+            pagesize=letter,
+            rightMargin=0.5 * inch,
+            leftMargin=0.5 * inch,
+            topMargin=0.5 * inch,
+            bottomMargin=0.5 * inch,
+        )
 
+        # Build the content
+        content = []
 
-if __name__ == "__main__":
-    test_template()
+        # Add header content
+        content = self._add_header_content(data, content)
+
+        # Add violation content
+        content = self._add_violation_content(data, content)
+
+        # Add footer content
+        content = self._add_footer_content(data, content)
+
+        # Build the PDF
+        doc.build(content)
+
+        return output_path

@@ -68,7 +68,9 @@ class Violation(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     report_id = db.Column(
-        db.Integer, db.ForeignKey("violation_reports.id"), nullable=False
+        db.Integer,
+        db.ForeignKey("violation_reports.id", ondelete="CASCADE"),
+        nullable=False,
     )
     violation_type = db.Column(db.String(255), nullable=False)
     notes = db.Column(db.Text, nullable=True)
@@ -99,7 +101,9 @@ class ViolationImage(db.Model):
     __tablename__ = "violation_images"
 
     id = db.Column(db.Integer, primary_key=True)
-    violation_id = db.Column(db.Integer, db.ForeignKey("violations.id"), nullable=False)
+    violation_id = db.Column(
+        db.Integer, db.ForeignKey("violations.id", ondelete="CASCADE"), nullable=False
+    )
     filename = db.Column(db.String(255), nullable=False)
     original_filename = db.Column(db.String(255), nullable=False)
     file_path = db.Column(db.String(500), nullable=False)
