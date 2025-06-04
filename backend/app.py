@@ -323,7 +323,7 @@ if __name__ == "__main__":
     # run join on district and address
     with app.app_context():
         # New object-oriented approach (recommended)
-        collector = ViolationDataCollector("muegge_farms")
+        collector = ViolationDataCollector("highlands_mead")
         consolidated_data = collector.collect_violation_data()
         print(
             f"Collected {len(consolidated_data)} violation records for PDF generation."

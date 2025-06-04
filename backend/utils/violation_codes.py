@@ -30,6 +30,21 @@ violations = {
             "violation_name": "Unsightly Conditions",
             "description": """No unsightly articles or conditions shall be permitted to remain or accumulate on any Lot. By way of example, but not limitation, such items could include rock or mulch piles, construction materials, abandoned toys, inoperable vehicles, dead or dying landscaping, peeling or faded paint, gardening equipment not in actual use, fencing in disrepair, etc. Gravel, rock mulch, bark mulch, timbers, block, or other types of bulk landscaping material or construction material must be installed on the Lot or moved to a location not visible from the street within 14 days of delivery.""",
         },
+        "fence": {
+            "title": "2.18 Fences",
+            "code_number": "2.18",
+            "violation_name": "Fences",
+            "description": """Fence Stain: Fence stain is mandatory. The only pre-approved stain or treatment is “Sherwin Williams – Hawthorne (SW3518)”. All others require DRC approval.""",
+        },
+        "bball_hoop": {
+            "title": "2.8 Basketball Hoops",
+            "code_number": "2.8",
+            "violation_name": "Basketball Hoops",
+            "description": """PORTABLE HOOPS:
+Approval is not required provided the following guidelines are met:
+• For safety and access reasons, hoops may not be placed in the street or on the sidewalk unless during actual play. Portable hoops are allowed in the driveways from April 1 through September 30. From October 1 through March 30th, they must be stored out of view from any street, common area or ground floor of any adjacent lot when not in use.
+BACK-YARD INSTALLATION/PERMANENT HOOPS: Approval is required prior to installation. All requests will be evaluated on placement and circumstances of each backyard, as well as court area surface, visual screening, and proximity to neighbors. See also Play Equipment.""",
+        },
     },
     "muegge_farms": {
         "weeds": {

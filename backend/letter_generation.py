@@ -2,6 +2,8 @@ import re
 from database.models import District, Account, ViolationReport
 from pdf_generator.generate_pdf import ViolationNoticePDF
 from utils.violation_codes import violations
+from datetime import datetime, date
+from database import db
 
 
 class AddressNormalizer:
@@ -67,8 +69,13 @@ class ViolationDataCollector:
         }
 
     def _get_violation_reports(self):
-        """Get all violation reports for the district."""
-        return ViolationReport.query.filter_by(district=self.district_name).all()
+        """Get all violation reports for the district updated today."""
+        today = date.today()
+        return (
+            ViolationReport.query.filter_by(district=self.district_name)
+            .filter(db.func.date(ViolationReport.updated_at) == today)
+            .all()
+        )
 
     def _get_district_regulations(self, district_name, violation_type):
         """Fetch district regulations for a specific violation type."""
