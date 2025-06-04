@@ -321,14 +321,14 @@ if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
 
     # run join on district and address
-    with app.app_context():
-        # New object-oriented approach (recommended)
-        collector = ViolationDataCollector("highlands_mead")
-        consolidated_data = collector.collect_violation_data()
-        print(
-            f"Collected {len(consolidated_data)} violation records for PDF generation."
-        )
-        # print(pdf_data)
-        PDFGenerator.generate_consolidated_pdfs(consolidated_data)
+    # with app.app_context():
+    #     # New object-oriented approach (recommended)
+    #     collector = ViolationDataCollector("highlands_mead")
+    #     consolidated_data = collector.collect_violation_data()
+    #     print(
+    #         f"Collected {len(consolidated_data)} violation records for PDF generation."
+    #     )
+    #     # print(pdf_data)
+    #     PDFGenerator.generate_consolidated_pdfs(consolidated_data)
 
     app.run(debug=debug_mode, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
