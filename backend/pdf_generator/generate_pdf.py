@@ -289,7 +289,8 @@ class ViolationNoticePDF:
     def _add_header_content(self, data, content):
         """Add the header content to the PDF (district info, recipient, etc.)"""
         # District name (large and blue)
-        content.append(Paragraph(data["district_label"], self.styles["DistrictName"]))
+        district_name_block = {data["district_label"]} + " Metro District"
+        content.append(district_name_block, self.styles["DistrictName"])
 
         # District address block (standard style)
         district_address_block = """c/o Public Alliance LLC<br/>
@@ -377,9 +378,10 @@ class ViolationNoticePDF:
                 )
             )
 
-        content.append(
-            Paragraph(regulation["description"], self.styles["RegulationText"])
-        )
+        # Dynamically insert newlines before each bullet point for better formatting
+        formatted_description = regulation["description"].replace("•", "<br/>•")
+
+        content.append(Paragraph(formatted_description, self.styles["RegulationText"]))
 
         # Add violation image if available
         if (
