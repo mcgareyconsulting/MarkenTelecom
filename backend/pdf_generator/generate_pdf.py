@@ -289,8 +289,12 @@ class ViolationNoticePDF:
     def _add_header_content(self, data, content):
         """Add the header content to the PDF (district info, recipient, etc.)"""
         # District name (large and blue)
-        district_name_block = data["district_label"] + " Metro District"
-        content.append(district_name_block, self.styles["DistrictName"])
+        content.append(
+            Paragraph(
+                f"{data['district_label']} Metropolitan District",
+                self.styles["DistrictName"],
+            )
+        )
 
         # District address block (standard style)
         district_address_block = """c/o Public Alliance LLC<br/>
@@ -347,7 +351,7 @@ class ViolationNoticePDF:
             )
 
         # Letter content
-        letter_content = f"""One of the primary responsibilities of {data['district_label']} ("the District") is to protect the aesthetic appeal and property values
+        letter_content = f"""One of the primary responsibilities of {data['district_label']} Metropolitan District ("the District") is to protect the aesthetic appeal and property values
         of the neighborhood. To accomplish this, certain Covenants and Design Guidelines have
         been established by which homeowners and residents must abide. During a recent
         inspection the following concerns were noted regarding your property and the District is asking for your
@@ -422,7 +426,12 @@ class ViolationNoticePDF:
 
         # Closing
         content.append(Paragraph("Sincerely,", self.styles["Closing"]))
-        content.append(Paragraph(data["district_label"], self.styles["Signature"]))
+        content.append(
+            Paragraph(
+                f"{data['district_label']} Metropolitan District",
+                self.styles["Signature"],
+            )
+        )
 
         return content
 
