@@ -43,6 +43,8 @@ export function ViolationItem({
     { value: 'trash', label: 'Trash Cans' },
     { value: 'debris', label: 'Debris' },
     { value: 'structure', label: 'Structure Violation' },
+    { value: 'bball_hoop', label: 'Basketball Hoop' },
+    { value: 'fence', label: 'Fence Violation' },
     { value: 'other', label: 'Other' },
   ];
 
