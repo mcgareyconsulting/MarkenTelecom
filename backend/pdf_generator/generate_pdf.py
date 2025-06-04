@@ -289,7 +289,7 @@ class ViolationNoticePDF:
     def _add_header_content(self, data, content):
         """Add the header content to the PDF (district info, recipient, etc.)"""
         # District name (large and blue)
-        district_name_block = {data["district_label"]} + " Metro District"
+        district_name_block = data["district_label"] + " Metro District"
         content.append(district_name_block, self.styles["DistrictName"])
 
         # District address block (standard style)
