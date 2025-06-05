@@ -65,6 +65,14 @@ export function ViolationForm() {
       label: 'Select Metro District',
     },
     {
+      value: 'ventana',
+      label: 'Ventana Metro District',
+    },
+    {
+      value: 'winsome',
+      label: 'Winsome Metro District',
+    },
+    {
       value: 'waters_edge',
       label: 'Waters Edge Metro District',
     },
@@ -75,7 +83,7 @@ export function ViolationForm() {
     {
       value: 'muegge_farms',
       label: 'Muegge Farms Metro District',
-    }
+    },
   ];
 
   // Function to fetch address suggestions
@@ -234,10 +242,45 @@ export function ViolationForm() {
   }, []);
 
   const handleAddressChange = (field: keyof AddressData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setAddress((prev) => ({
-      ...prev,
-      [field]: e.target.value,
-    }));
+    const value = e.target.value;
+
+    setAddress((prev) => {
+      // If the district is changed to 'winsome', auto-fill city/state/zip
+      if (field === 'district' && value === 'winsome') {
+        return {
+          ...prev,
+          district: value,
+          city: 'Colorado Springs',
+          state: 'CO',
+          zip: '80908',
+        };
+      }
+      // If the district is changed to 'ventana', auto-fill city/state/zip
+      if (field === 'district' && value === 'ventana') {
+        return {
+          ...prev,
+          district: value,
+          city: 'Fountain',
+          state: 'CO',
+          zip: '80817',
+        };
+      }
+      // If the district is changed to something else, clear city/state/zip if they were auto-filled
+      if (field === 'district' && prev.district === 'winsome' && value !== 'winsome') {
+        return {
+          ...prev,
+          district: value,
+          city: '',
+          state: '',
+          zip: '',
+        };
+      }
+      // Default behavior
+      return {
+        ...prev,
+        [field]: value,
+      };
+    });
   };
 
   const handleAddViolation = () => {
