@@ -84,6 +84,10 @@ export function ViolationForm() {
       value: 'muegge_farms',
       label: 'Muegge Farms Metro District',
     },
+    {
+      value: 'mountain_sky',
+      label: 'Mountain Sky Metro District',
+    }
   ];
 
   // Function to fetch address suggestions
@@ -265,8 +269,25 @@ export function ViolationForm() {
           zip: '80817',
         };
       }
+      // If the district is changed to 'mountain_sky', auto-fill city/state/zip
+      if (field === 'district' && value === 'mountain_sky') {
+        return {
+          ...prev,
+          district: value,
+          city: 'Fort Lupton',
+          state: 'CO',
+          zip: '80621',
+        };
+      }
       // If the district is changed to something else, clear city/state/zip if they were auto-filled
-      if (field === 'district' && prev.district === 'winsome' && value !== 'winsome') {
+      if (
+        field === 'district' &&
+        (
+          (prev.district === 'winsome' && value !== 'winsome') ||
+          (prev.district === 'ventana' && value !== 'ventana') ||
+          (prev.district === 'mountain_sky' && value !== 'mountain_sky')
+        )
+      ) {
         return {
           ...prev,
           district: value,
