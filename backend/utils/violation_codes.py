@@ -88,4 +88,112 @@ BACK-YARD INSTALLATION/PERMANENT HOOPS: Approval is required prior to installati
             "description": """All construction materials and fencing, weeds, rubbish, debris, or unsightly materials or objects of any kind shall be regularly removed from the Residential Sites and shall not be allowed to accumulate thereon. All clotheslines, trash containers, wood piles, storage areas, machinery, and equipment shall be prohibited upon any Residential Site unless obscured from view of adjoining streets, Residential Sites, sidewalks, homes, or District Property.""",
         },
     },
+    "ventana": {
+        "weeds": {
+            "title": "Section 3.36 Landscape Maintenance.",
+            "code_number": "3.36",
+            "violation_name": "Landscape Maintenance",
+            "description": """All landscaping shall be maintained in a neat and attractive condition. Minimum maintenance requirements include watering, mowing, edging, pruning, removal and replacement of dead or dying plant material, elimination of weeds and undesirable grasses and removal of trash.""",
+        },
+        "rv": {
+            "title": "Section 4.6 Vehicles and Parking.",
+            "code_number": "4.6",
+            "violation_name": "Vehicles and Parking",
+            "description": """All vehicles must be parked so as not to inhibit traffic or damage surrounding natural landscape. Construction worker vehicles and/or equipment shall not be left on community roads overnight. The AC may designate, at time of plan review or during construction, specific areas for parking of construction workers vehicles and/or equipment.""",
+        },
+        "grass": {
+            "title": "Section 3.36 Landscape Maintenance.",
+            "code_number": "3.36",
+            "violation_name": "Landscape Maintenance",
+            "description": """All landscaping shall be maintained in a neat and attractive condition. Minimum maintenance requirements include watering, mowing, edging, pruning, removal and replacement of dead or dying plant material, elimination of weeds and undesirable grasses and removal of trash.""",
+        },
+        "trash": {
+            "title": "Section 3.23 Trash Receptacles.",
+            "code_number": "3.23",
+            "violation_name": "Trash Receptacles",
+            "description": """Owners are to store their trash containers in the garage, or secured and screened behind privacy fencing, except for the day of collection services. All containers are to have attached lid and be secured to prevent them from blowing away. Recycling containers must be maintained in a likewise manner.""",
+        },
+        "debris": {
+            "title": "Section 4.5 Debris and Trash Removal.",
+            "code_number": "4.5",
+            "violation_name": "Debris and Trash Removal",
+            "description": """Regular cleanup of the construction home site is mandatory. All trash and debris shall be stored in a commercial trash container and shall be removed from the trash disposal area on a weekly basis or when full. All soil and debris flowing into the street(s) or open spaces from the construction home site shall be cleaned as needed. All trash must be disposed of off home site on a weekly basis. A fine may be imposed by the AC for noncompliance with these requirements.""",
+        },
+    },
+    "winsome": {
+        "weeds": {
+            "title": "Section 7.11. Sightly Condition of Units",
+            "code_number": "7.11",
+            "violation_name": "Sightly Condition of Units",
+            "description": """Each Unit shall at all times be kept, maintained, repaired and replaced in a good, clean and sightly condition by the Owner thereof.""",
+        },
+        "rv": {
+            "title": "Section 7.7 Vehicular Parking, Storage and Repairs; Use of Garages",
+            "code_number": "7.7.1",
+            "violation_name": "Vehicular Parking, Storage and Repairs; Use of Garages",
+            "description": """No house trailer, camping trailer, boat trailer, hauling trailer, jet ski, boat, or accessories thereto, truck (excluding, except as hereinafter provided, pickup trucks that are rated 1 ton or less), self-contained motorized recreational vehicle, or other type of recreational or commercial vehicle or equipment, may be parked or stored on a Unit, unless such parking or storage is entirely within the garage area of such Unit or will be suitably screened from view in accordance with the Rules and Regulations or prior written approval of the Community Council. However, any such vehicles may be otherwise parked as a temporary expedient for loading, delivery, or emergency for up to 72 hours maximum. This restriction, however, shall not restrict trucks or other commercial vehicles that are necessary for construction or maintenance of any portion of the Community or any Improvements located thereon.""",
+        },
+        "grass": {
+            "title": "Section 7.11. Sightly Condition of Units",
+            "code_number": "7.11",
+            "violation_name": "Sightly Condition of Units",
+            "description": """Each Unit shall at all times be kept, maintained, repaired and replaced in a good, clean and sightly condition by the Owner thereof.""",
+        },
+        "trash": {
+            "title": "Section 7.10. Restrictions on Trash and Materials.",
+            "code_number": "7.10",
+            "violation_name": "Restrictions on Trash and Materials",
+            "description": """No refuse, garbage, trash, lumber, grass, shrubs or tree clippings, plant waste, metal, bulk materials, scrap or debris of any kind shall be kept, stored, or allowed to accumulate, except inside a suitable, tightly-covered container inside the home (including garages and overhangs along the sides or rear of the home), on any Unit, nor shall any such items be deposited on a street or sidewalk, unless placed in a suitable, tightly-covered container that is suitably located solely for the purpose of garbage pickup. Further, no trash or materials shall be permitted to accumulate in such a manner as to be visible from any other portion of the Community. No trash, garbage or other refuse shall be burned in outside containers, barbecue pits or the like. All equipment for the storage or disposal of such materials shall be kept in a clean and sanitary condition. No garbage cans, trash cans or other trash receptacles shall be maintained in an exposed or unsightly manner.""",
+        },
+        "debris": {
+            "title": "Section 7.10. Restrictions on Trash and Materials.",
+            "code_number": "7.10",
+            "violation_name": "Restrictions on Trash and Materials",
+            "description": """No refuse, garbage, trash, lumber, grass, shrubs or tree clippings, plant waste, metal, bulk materials, scrap or debris of any kind shall be kept, stored, or allowed to accumulate, except inside a suitable, tightly-covered container inside the home (including garages and overhangs along the sides or rear of the home), on any Unit, nor shall any such items be deposited on a street or sidewalk, unless placed in a suitable, tightly-covered container that is suitably located solely for the purpose of garbage pickup. Further, no trash or materials shall be permitted to accumulate in such a manner as to be visible from any other portion of the Community. No trash, garbage or other refuse shall be burned in outside containers, barbecue pits or the like. All equipment for the storage or disposal of such materials shall be kept in a clean and sanitary condition. No garbage cans, trash cans or other trash receptacles shall be maintained in an exposed or unsightly manner.""",
+        },
+        "erosion": {
+            "title": "Design Guidelines: Landscape",
+            "code_number": "",
+            "violation_name": "Erosion",
+            "description": """Landscaping, erosion and weed control: Lot Owners are encouraged to nurture trees that are native and pre-existing to the lot, as well as the planting of native trees to the area and/or can thrive in this climate. All soils disturbed during the building process will be regraded to natural grade and require amended topsoil and seeded with a native grass mix. Weed control is the sole responsibility of each individual lot owner and imperative to the site (see below for Noxious Weed Management Plan). Importation of fill dirt and landscaping material from other locations is strictly prohibited unless it is certified as weed free. All lot owners must maintain drainage easements.""",
+        },
+    },
+    "mountain_sky": {
+        "weeds": {
+            "title": "Section 3.11 Lots to be Maintained.",
+            "code_number": "3.11",
+            "violation_name": "Lots to be Maintained",
+            "description": """Subject to Section 3.4 hereof, each Lot shall at all times be kept in a clean and sightly condition by the Owner(s) thereof.""",
+        },
+        "motorized_vehicles": {
+            "title": "VV. MOTORIZED VEHICLES",
+            "code_number": "VV",
+            "violation_name": "Motorized Vehicles",
+            "description": """Motorized vehicles include, but are not limited to, snowmobiles, golf carts, motorcycles, minibikes, go-carts, mopeds, and delivery trucks, but exclude lawn cutting, snow removal, or maintenance equipment. Motorized vehicles shall not be parked so as to be visible from any of the Homes or the street. Motorized vehicles are not to be driven on greenbelts or Common Elements.""",
+        },
+        "rv": {
+            "title": "UU. MOTOR HOME VEHICLES",
+            "code_number": "UU",
+            "violation_name": "Motor Home Vehicles",
+            "description": """Not permitted to be located or parked permanently within the Community, as set forth in Section 3.6 of the Declaration. These vehicles must be moved from the Community within seventy-two (72) hours unless approved in writing by the ACC. This seventy-two (72) hour period is allowed for loading or unloading before and after trips. Such vehicles may be stored only within garages. The District does not permit enclosed structures other than garages for this type of storage.""",
+        },
+        "grass": {
+            "title": "Section 3.11 Lots to be Maintained.",
+            "code_number": "3.11",
+            "violation_name": "Lots to be Maintained",
+            "description": """Subject to Section 3.4 hereof, each Lot shall at all times be kept in a clean and sightly condition by the Owner(s) thereof.""",
+        },
+        "trash": {
+            "title": "Section 3.10 Restrictions on Trash and Materials.",
+            "code_number": "3.10",
+            "violation_name": "Restrictions on Trash and Materials",
+            "description": """No refuse, garbage, trash, lumber, grass, shrubs or tree clippings, plant waste, metal, bulk materials, scrap or debris of any kind shall be kept, stored, or allowed to accumulate except inside the residence on any Lot nor shall such items be deposited on a street, unless placed in a suitable, tightly-covered container that is suitably located solely for the purpose of garbage pickup. Further, no trash or materials shall be permitted to accumulate in such a manner as to be visible from any Lot. All equipment for the storage or disposal of such materials shall be kept in a clean and sanitary condition. No garbage or trash cans or receptacles shall be maintained in an exposed or unsightly manner.""",
+        },
+        "debris": {
+            "title": "Section 3.10 Restrictions on Trash and Materials.",
+            "code_number": "3.10",
+            "violation_name": "Restrictions on Trash and Materials",
+            "description": """No refuse, garbage, trash, lumber, grass, shrubs or tree clippings, plant waste, metal, bulk materials, scrap or debris of any kind shall be kept, stored, or allowed to accumulate except inside the residence on any Lot nor shall such items be deposited on a street, unless placed in a suitable, tightly-covered container that is suitably located solely for the purpose of garbage pickup. Further, no trash or materials shall be permitted to accumulate in such a manner as to be visible from any Lot. All equipment for the storage or disposal of such materials shall be kept in a clean and sanitary condition. No garbage or trash cans or receptacles shall be maintained in an exposed or unsightly manner.""",
+        },
+    },
 }
