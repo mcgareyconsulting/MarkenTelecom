@@ -324,19 +324,18 @@ if __name__ == "__main__":
     # run join on district and address
     with app.app_context():
         # New object-oriented approach (recommended)
-        collector = ViolationDataCollector("highlands_mead")
+        collector = ViolationDataCollector("winsome")
         consolidated_data = collector.collect_violation_data()
         violations = [v for group in consolidated_data for v in group]
         print(
             f"Collected {len(consolidated_data)} violation records for PDF generation."
         )
-        # print(pdf_data)
-        # PDFGenerator.generate_consolidated_pdfs(consolidated_data)
-        # board report
-        generate_board_report(
-            output_path="board_report.pdf",
-            district_name="Highlands Mead",
-            violations=violations,
-            date=datetime.now().strftime("%B %d, %Y"),
-        )
+        PDFGenerator.generate_consolidated_pdfs(consolidated_data)
+    # board report
+    # generate_board_report(
+    #     output_path="board_report.pdf",
+    #     district_name="Highlands Mead",
+    #     violations=violations,
+    #     date=datetime.now().strftime("%B %d, %Y"),
+    # )
     app.run(debug=debug_mode, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

@@ -193,36 +193,19 @@ class ViolationNoticePDF:
         return str(date_value)
 
     def _fetch_and_prepare_image(
-        self, image_url, max_width=180, max_height=240, quality=95, sharpen_factor=1.3
+        self, image_url, max_width=600, max_height=900, quality=95, sharpen_factor=1.0
     ):
-        """
-        Fetch image from URL, apply EXIF orientation, convert to sRGB,
-        scale to fit max dimensions with high quality, apply sharpening,
-        and return ReportLab Image flowable.
-
-        Args:
-            image_url (str): URL of the image to fetch
-            max_width (int): Maximum width for the resized image
-            max_height (int): Maximum height for the resized image
-            quality (int): Quality setting for image saving (1-100)
-            sharpen_factor (float): Amount of sharpening to apply (1.0 = no change)
-        """
         try:
-            # Fetch image bytes
             response = requests.get(image_url)
             response.raise_for_status()
             img_data = response.content
 
-            # Open with PIL for processing
             pil_img = PILImage.open(io.BytesIO(img_data))
-
-            # Convert to RGB if image is in CMYK or other color modes
             if pil_img.mode != "RGB":
                 pil_img = pil_img.convert("RGB")
 
-            # Apply EXIF orientation (fix rotation for mobile photos)
             try:
-                for orientation in ExifTags.TAGS.keys():
+                for orientation in ExifTags.TAGS:
                     if ExifTags.TAGS[orientation] == "Orientation":
                         break
                 exif = pil_img._getexif()
@@ -235,50 +218,29 @@ class ViolationNoticePDF:
                     elif orientation_value == 8:
                         pil_img = pil_img.rotate(90, expand=True)
             except Exception:
-                # No EXIF or no orientation tag, ignore silently
                 pass
 
-            # Get original dimensions
             width, height = pil_img.size
-
-            # Calculate scaling ratio while preserving aspect ratio
-            ratio = min(max_width / width, max_height / height, 1)  # don't upscale
-
-            # Calculate new dimensions
+            ratio = min(max_width / width, max_height / height, 1)
             new_width = int(width * ratio)
             new_height = int(height * ratio)
 
-            # For large downscaling, use a two-step resize process for better quality
             if width > new_width * 2 or height > new_height * 2:
-                # First resize to an intermediate size
-                intermediate_width = int(new_width * 1.5)
-                intermediate_height = int(new_height * 1.5)
                 intermediate_img = pil_img.resize(
-                    (intermediate_width, intermediate_height), PILImage.LANCZOS
+                    (int(new_width * 1.5), int(new_height * 1.5)), PILImage.LANCZOS
                 )
-                # Then resize to final size
                 pil_img = intermediate_img.resize(
                     (new_width, new_height), PILImage.LANCZOS
                 )
             else:
-                # Single-step resize for smaller reductions
                 pil_img = pil_img.resize((new_width, new_height), PILImage.LANCZOS)
 
-            # Apply a slight unsharp mask to enhance details
-            if sharpen_factor > 1.0:
-                # First apply a subtle gaussian blur
-                pil_img = pil_img.filter(ImageFilter.GaussianBlur(radius=0.5))
-                # Then apply sharpening
-                enhancer = ImageEnhance.Sharpness(pil_img)
-                pil_img = enhancer.enhance(sharpen_factor)
-
-            # Save to PNG format for best quality
             output_buffer = io.BytesIO()
             pil_img.save(output_buffer, format="PNG", optimize=True)
             output_buffer.seek(0)
 
-            # Create ReportLab Image flowable
-            reportlab_img = Image(output_buffer, width=new_width, height=new_height)
+            # Fixed display size (2"x3" = 144pt x 216pt)
+            reportlab_img = Image(output_buffer, width=144, height=216)
             reportlab_img.hAlign = "CENTER"
 
             return reportlab_img
