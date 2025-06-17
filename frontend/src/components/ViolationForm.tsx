@@ -24,7 +24,6 @@ type AddressSuggestion = {
   state?: string;
   zip?: string;
   district?: string;
-  // If your API returns an ID or other identifier for fetching full details
   id?: string;
 };
 
@@ -40,8 +39,12 @@ export function ViolationForm() {
 
   // Autocomplete states
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // District-based preloading states
+  const [districtAccounts, setDistrictAccounts] = useState<AddressSuggestion[]>([]);
+  const [isLoadingDistrict, setIsLoadingDistrict] = useState(false);
+  const [districtLoadError, setDistrictLoadError] = useState<string | null>(null);
 
   const [violations, setViolations] = useState<Violation[]>([{
     id: 1,
@@ -90,42 +93,57 @@ export function ViolationForm() {
     }
   ];
 
-  // Function to fetch address suggestions
-  const fetchAddressSuggestions = async (query: string) => {
-    if (!query || query.length < 2) {
-      setSuggestions([]);
+  // Function to load all accounts for a specific district
+  const loadDistrictAccounts = async (districtValue: string) => {
+    if (!districtValue) {
+      setDistrictAccounts([]);
       return;
     }
 
-    setIsLoadingSuggestions(true);
-    try {
+    setIsLoadingDistrict(true);
+    setDistrictLoadError(null);
 
-      //  Define base url
+    try {
       const baseUrl =
         import.meta.env.MODE === 'production'
           ? 'https://markentelecombackend.onrender.com'
           : 'http://127.0.0.1:8000';
 
-      const response = await fetch(`${baseUrl}/api/address/autocomplete?q=${encodeURIComponent(query)}&limit=5`);
+      const response = await fetch(
+        `${baseUrl}/api/district/${encodeURIComponent(districtValue)}/accounts`
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch suggestions');
+        throw new Error(`Failed to load accounts for district: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      console.log('API Response:', data); // Debug log
-
-      // Handle the actual API response structure
-      setSuggestions(data || []);
+      const accounts = await response.json();
+      console.log(`Loaded ${accounts.length} accounts for district:`, districtValue);
+      setDistrictAccounts(accounts || []);
     } catch (error) {
-      console.error('Error fetching address suggestions:', error);
-      setSuggestions([]);
+      console.error('Error loading district accounts:', error);
+      setDistrictLoadError(error instanceof Error ? error.message : 'Failed to load district accounts');
+      setDistrictAccounts([]);
     } finally {
-      setIsLoadingSuggestions(false);
+      setIsLoadingDistrict(false);
     }
   };
 
-  // Handle address line 1 input change with debounce and autocomplete
+  // Client-side filtering function
+  const filterAccountsByQuery = (query: string): AddressSuggestion[] => {
+    if (!query || query.length < 2) {
+      return [];
+    }
+
+    const lowercaseQuery = query.toLowerCase();
+    return districtAccounts
+      .filter(account =>
+        account.service_address.toLowerCase().includes(lowercaseQuery)
+      )
+      .slice(0, 5); // Limit to 5 suggestions
+  };
+
+  // Handle address line 1 input change with client-side filtering
   const handleAddressLine1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setAddress((prev) => ({
@@ -138,88 +156,29 @@ export function ViolationForm() {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Set new timer for autocomplete
+    // Set new timer for client-side filtering
     debounceTimerRef.current = setTimeout(() => {
-      fetchAddressSuggestions(value);
-    }, 300); // 300ms debounce
+      const filtered = filterAccountsByQuery(value);
+      setSuggestions(filtered);
+    }, 150); // Reduced debounce since it's client-side
 
     setShowSuggestions(true);
   };
 
   // Handle suggestion selection
-  const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {
-
-    // Update the address line 1 immediately
+  const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
+    // Update the address with the selected suggestion
     setAddress((prev) => ({
       ...prev,
       line1: suggestion.service_address,
+      city: suggestion.city || prev.city,
+      state: suggestion.state || prev.state,
+      zip: suggestion.zip || prev.zip,
+      district: suggestion.district || prev.district,
     }));
 
     setSuggestions([]);
     setShowSuggestions(false);
-
-    // If the suggestion already contains complete address data
-    if (suggestion.city && suggestion.state && suggestion.zip) {
-      setAddress((prev) => ({
-        ...prev,
-        line1: suggestion.service_address,
-        city: suggestion.city || '',
-        state: suggestion.state || '',
-        zip: suggestion.zip || '',
-        district: suggestion.district || '',
-      }));
-    } else {
-      // Make a second API call to get complete address details
-      try {
-
-        //  Define base url
-        const baseUrl =
-          import.meta.env.MODE === 'production'
-            ? 'https://markentelecombackend.onrender.com'
-            : 'http://127.0.0.1:8000';
-
-        setIsLoadingSuggestions(true);
-        const response = await fetch(`${baseUrl}/api/address/details?address=${encodeURIComponent(suggestion.service_address)}`);
-
-        if (response.ok) {
-          const addressDetails = await response.json();
-          console.log('Address details:', addressDetails);
-
-          setAddress((prev) => ({
-            ...prev,
-            line1: suggestion.service_address,
-            city: addressDetails.city || '',
-            state: addressDetails.state || '',
-            zip: addressDetails.zip || '',
-            district: prev.district || '',
-          }));
-        } else {
-          // Fallback to default values if API call fails
-          console.warn('Failed to fetch address details, using defaults');
-          setAddress((prev) => ({
-            ...prev,
-            line1: suggestion.service_address,
-            city: '',
-            state: '',
-            zip: '',
-            district: prev.district
-          }));
-        }
-      } catch (error) {
-        console.error('Error fetching address details:', error);
-        // Fallback to default values
-        setAddress((prev) => ({
-          ...prev,
-          line1: suggestion.service_address,
-          city: '',
-          state: '',
-          zip: '',
-          district: prev.district,
-        }));
-      } finally {
-        setIsLoadingSuggestions(false);
-      }
-    }
   };
 
   // Handle click outside to close suggestions
@@ -249,31 +208,46 @@ export function ViolationForm() {
     const value = e.target.value;
 
     setAddress((prev) => {
-      // If the district is changed to 'winsome', auto-fill city/state/zip
+      // If the district is changed, load accounts for that district
+      if (field === 'district') {
+        // Clear current address line 1 and suggestions when district changes
+        setSuggestions([]);
+        setShowSuggestions(false);
+
+        // Load accounts for the new district
+        if (value) {
+          loadDistrictAccounts(value);
+        } else {
+          setDistrictAccounts([]);
+        }
+      }
+
+      // Auto-fill city/state/zip based on district
       if (field === 'district' && value === 'winsome') {
         return {
           ...prev,
           district: value,
+          line1: '', // Clear address line 1 when district changes
           city: 'Colorado Springs',
           state: 'CO',
           zip: '80908',
         };
       }
-      // If the district is changed to 'ventana', auto-fill city/state/zip
       if (field === 'district' && value === 'ventana') {
         return {
           ...prev,
           district: value,
+          line1: '', // Clear address line 1 when district changes
           city: 'Fountain',
           state: 'CO',
           zip: '80817',
         };
       }
-      // If the district is changed to 'mountain_sky', auto-fill city/state/zip
       if (field === 'district' && value === 'mountain_sky') {
         return {
           ...prev,
           district: value,
+          line1: '', // Clear address line 1 when district changes
           city: 'Fort Lupton',
           state: 'CO',
           zip: '80621',
@@ -291,6 +265,7 @@ export function ViolationForm() {
         return {
           ...prev,
           district: value,
+          line1: '', // Clear address line 1 when district changes
           city: '',
           state: '',
           zip: '',
@@ -420,6 +395,7 @@ export function ViolationForm() {
         image: null,
         notes: ''
       }]);
+      setDistrictAccounts([]);
 
     } catch (err) {
       console.error('Submission error:', err);
@@ -445,6 +421,13 @@ export function ViolationForm() {
         </div>
       )}
 
+      {/* Show district loading error if there is one */}
+      {districtLoadError && (
+        <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+          Warning: {districtLoadError}
+        </div>
+      )}
+
       <div className="md:col-span-2 mb-6">
         <h2 className="text-lg font-medium text-gray-800 mb-4">
           Location Details
@@ -461,6 +444,7 @@ export function ViolationForm() {
           onChange={handleAddressChange('district')}
           className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
           required
+          disabled={isLoadingDistrict}
         >
           {districts.map((district) => (
             <option key={district.value} value={district.value}>
@@ -468,6 +452,16 @@ export function ViolationForm() {
             </option>
           ))}
         </select>
+        {isLoadingDistrict && (
+          <div className="mt-2 text-sm text-blue-600">
+            Loading accounts for selected district...
+          </div>
+        )}
+        {districtAccounts.length > 0 && (
+          <div className="mt-2 text-sm text-green-600">
+            {districtAccounts.length} accounts loaded for this district
+          </div>
+        )}
       </div>
 
       <div className="mb-8">
@@ -486,19 +480,18 @@ export function ViolationForm() {
               onChange={handleAddressLine1Change}
               onFocus={() => setShowSuggestions(true)}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Street address"
+              placeholder={address.district ? "Start typing to search addresses..." : "Select a district first"}
               required
+              disabled={!address.district || isLoadingDistrict}
             />
 
             {/* Address suggestions dropdown */}
-            {showSuggestions && (
+            {showSuggestions && address.district && (
               <div
                 ref={suggestionsRef}
                 className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
               >
-                {isLoadingSuggestions ? (
-                  <div className="p-2 text-gray-500">Loading...</div>
-                ) : suggestions.length > 0 ? (
+                {suggestions.length > 0 ? (
                   <ul>
                     {suggestions.map((suggestion, index) => (
                       <li
@@ -507,12 +500,21 @@ export function ViolationForm() {
                         className="p-2 hover:bg-gray-100 cursor-pointer"
                       >
                         <div className="font-medium">{suggestion.service_address}</div>
+                        {suggestion.city && (
+                          <div className="text-sm text-gray-500">
+                            {suggestion.city}, {suggestion.state} {suggestion.zip}
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>
                 ) : address.line1.length >= 2 ? (
-                  <div className="p-2 text-gray-500">No suggestions found</div>
-                ) : null}
+                  <div className="p-2 text-gray-500">No matching addresses found</div>
+                ) : districtAccounts.length > 0 ? (
+                  <div className="p-2 text-gray-500">Type at least 2 characters to search</div>
+                ) : (
+                  <div className="p-2 text-gray-500">No accounts available for this district</div>
+                )}
               </div>
             )}
           </div>

@@ -26,6 +26,9 @@ from database.models import (
     import_excel_to_db,
 )
 
+# sqlalchemy import
+from sqlalchemy import or_
+
 # cloudinary import
 import cloudinary
 import cloudinary.uploader
@@ -118,44 +121,161 @@ def generate_unique_filename(original_filename: str) -> str:
     return unique_name
 
 
-# Routes
-@app.route("/api/address/autocomplete", methods=["GET"])
-def autocomplete():
-    """Address autocomplete endpoint"""
-    query = request.args.get("q", "").lower()
-    results = []
+@app.route("/api/district/<string:district_code>/accounts", methods=["GET"])
+def get_district_accounts(district_code: str):
+    """
+    Get all accounts for a specific district by district code.
+    Returns simplified account data optimized for autocomplete functionality.
 
-    for record in homeowner_records:
-        if query in record["ServiceAddress"]:
-            # Split city, state, zip
-            city_state_zip = record.get("SvcCitySTZip", "")
-            city, state, zip_code = "", "", ""
+    Args:
+        district_code: The district code (e.g., 'ventana', 'winsome', 'mountain_sky')
 
-            try:
-                # Example: "Bennett, CO 80010"
-                parts = city_state_zip.split(",")
-                if len(parts) == 2:
-                    city = parts[0].strip()
-                    state_zip = parts[1].strip().split(" ")
-                    if len(state_zip) == 2:
-                        state = state_zip[0]
-                        zip_code = state_zip[1]
-            except Exception as e:
-                print(f"Error parsing city/state/zip: {city_state_zip} - {e}")
+    Query Parameters:
+        limit: Maximum number of accounts to return (default: no limit)
+        active_only: If true, only return accounts with service addresses (default: true)
 
-            results.append(
-                {
-                    "service_address": record["ServiceAddress"],
-                    "city": city,
-                    "state": state,
-                    "zip": zip_code,
-                }
+    Returns:
+        JSON array of account objects with service address info
+    """
+    try:
+        # Get query parameters
+        limit = request.args.get("limit", type=int)
+        active_only = request.args.get("active_only", default="true").lower() == "true"
+
+        # Map frontend district codes to database district codes/names
+        # You may need to adjust this mapping based on your actual data
+        district_code_mapping = {
+            "ventana": ["VENTANA", "VMD"],
+            "winsome": ["WINSOME", "WMD"],
+            "waters_edge": ["WATERS_EDGE", "WEMD"],
+            "highlands_mead": ["HIGHLANDS_MEAD", "HMMD"],
+            "muegge_farms": ["MUEGGE_FARMS", "MFMD"],
+            "mountain_sky": ["MOUNTAIN_SKY", "MSMD"],
+        }
+
+        # Get the possible district codes/names for this district
+        possible_codes = district_code_mapping.get(
+            district_code.lower(), [district_code.upper()]
+        )
+
+        # Find the district(s) in the database
+        districts = District.query.filter(
+            or_(
+                District.code.in_(possible_codes),
+                District.name.in_(possible_codes),
+                District.label.in_(possible_codes),
+            )
+        ).all()
+
+        if not districts:
+            return (
+                jsonify(
+                    {
+                        "error": f"District not found: {district_code}",
+                        "available_districts": [d.code for d in District.query.all()],
+                    }
+                ),
+                404,
             )
 
-            if len(results) >= 10:
-                break
+        # Get district IDs
+        district_ids = [d.id for d in districts]
 
-    return jsonify(results)
+        # Build the query for accounts
+        query = Account.query.filter(Account.district_id.in_(district_ids))
+
+        # Filter for active accounts only (those with service addresses)
+        if active_only:
+            query = query.filter(Account.service_address.isnot(None))
+            query = query.filter(Account.service_address != "")
+
+        # Apply limit if specified
+        if limit:
+            query = query.limit(limit)
+
+        # Execute query
+        accounts = query.all()
+
+        # Format the response for autocomplete
+        formatted_accounts = []
+        for account in accounts:
+            # Parse city, state, zip from service_city_st_zip
+            city, state, zip_code = parse_city_state_zip(account.service_city_st_zip)
+
+            account_data = {
+                "id": account.id,
+                "account_number": account.account_number,
+                "account_name": account.account_name,
+                "service_address": account.service_address,
+                "city": city,
+                "state": state,
+                "zip": zip_code,
+                "district": district_code,  # Use the requested district code
+                "lot_number": account.lot_number,
+            }
+            formatted_accounts.append(account_data)
+
+        # Sort by service address for better UX
+        formatted_accounts.sort(key=lambda x: x["service_address"] or "")
+
+        return jsonify(formatted_accounts)
+
+    except Exception as e:
+        print(f"Error fetching district accounts: {str(e)}")
+        return jsonify({"error": "Internal server error", "message": str(e)}), 500
+
+
+def parse_city_state_zip(city_st_zip: str) -> tuple[str, str, str]:
+    """
+    Parse city, state, and zip from a combined string.
+
+    Expected formats:
+    - "Colorado Springs, CO 80908"
+    - "Fountain, CO 80817"
+    - "Fort Lupton, CO 80621"
+
+    Args:
+        city_st_zip: Combined city, state, zip string
+
+    Returns:
+        Tuple of (city, state, zip)
+    """
+    if not city_st_zip:
+        return "", "", ""
+
+    try:
+        # Pattern to match "City, ST ZIP" format
+        pattern = r"^(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$"
+        match = re.match(pattern, city_st_zip.strip())
+
+        if match:
+            city = match.group(1).strip()
+            state = match.group(2).strip()
+            zip_code = match.group(3).strip()
+            return city, state, zip_code
+        else:
+            # Fallback: try to split by comma and space
+            parts = city_st_zip.split(",")
+            if len(parts) >= 2:
+                city = parts[0].strip()
+                state_zip = parts[1].strip().split()
+                if len(state_zip) >= 2:
+                    state = state_zip[0].strip()
+                    zip_code = state_zip[1].strip()
+                    return city, state, zip_code
+                elif len(state_zip) == 1:
+                    # Could be just state or just zip
+                    if state_zip[0].isdigit():
+                        return city, "", state_zip[0]
+                    else:
+                        return city, state_zip[0], ""
+
+            # If all else fails, return the original string as city
+            return city_st_zip, "", ""
+
+    except Exception as e:
+        print(f"Error parsing city_st_zip '{city_st_zip}': {str(e)}")
+        return city_st_zip or "", "", ""
 
 
 # @app.route("/api/violations_list_per_district", methods=["GET"])
@@ -322,15 +442,15 @@ if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
 
     # run join on district and address
-    with app.app_context():
-        # New object-oriented approach (recommended)
-        collector = ViolationDataCollector("winsome")
-        consolidated_data = collector.collect_violation_data()
-        violations = [v for group in consolidated_data for v in group]
-        print(
-            f"Collected {len(consolidated_data)} violation records for PDF generation."
-        )
-        PDFGenerator.generate_consolidated_pdfs(consolidated_data)
+    # with app.app_context():
+    #     # New object-oriented approach (recommended)
+    #     collector = ViolationDataCollector("winsome")
+    #     consolidated_data = collector.collect_violation_data()
+    #     violations = [v for group in consolidated_data for v in group]
+    #     print(
+    #         f"Collected {len(consolidated_data)} violation records for PDF generation."
+    #     )
+    #     PDFGenerator.generate_consolidated_pdfs(consolidated_data)
     # board report
     # generate_board_report(
     #     output_path="board_report.pdf",
