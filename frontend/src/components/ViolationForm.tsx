@@ -220,52 +220,11 @@ export function ViolationForm() {
         } else {
           setDistrictAccounts([]);
         }
-      }
-
-      // Auto-fill city/state/zip based on district
-      if (field === 'district' && value === 'winsome') {
+        // Also clear address fields when district changes
         return {
           ...prev,
           district: value,
-          line1: '', // Clear address line 1 when district changes
-          city: 'Colorado Springs',
-          state: 'CO',
-          zip: '80908',
-        };
-      }
-      if (field === 'district' && value === 'ventana') {
-        return {
-          ...prev,
-          district: value,
-          line1: '', // Clear address line 1 when district changes
-          city: 'Fountain',
-          state: 'CO',
-          zip: '80817',
-        };
-      }
-      if (field === 'district' && value === 'mountain_sky') {
-        return {
-          ...prev,
-          district: value,
-          line1: '', // Clear address line 1 when district changes
-          city: 'Fort Lupton',
-          state: 'CO',
-          zip: '80621',
-        };
-      }
-      // If the district is changed to something else, clear city/state/zip if they were auto-filled
-      if (
-        field === 'district' &&
-        (
-          (prev.district === 'winsome' && value !== 'winsome') ||
-          (prev.district === 'ventana' && value !== 'ventana') ||
-          (prev.district === 'mountain_sky' && value !== 'mountain_sky')
-        )
-      ) {
-        return {
-          ...prev,
-          district: value,
-          line1: '', // Clear address line 1 when district changes
+          line1: '',
           city: '',
           state: '',
           zip: '',
