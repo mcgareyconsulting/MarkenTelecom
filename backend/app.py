@@ -11,6 +11,7 @@ from letter_generation import (
     ViolationDataCollector,
     PDFGenerator,
 )
+from pdf_generator.board_report import generate_board_report
 
 # from letter_generation import generate_pdfs
 from database import db, init_db
@@ -85,14 +86,14 @@ def create_app():
 # Create app instance
 app = create_app()
 
-# load dattaset into db
+# load dataset into db
 # with app.app_context():
 #     try:
 #         import_excel_to_db(
-#             excel_path="../datasets/MSMD_CL_250602_partial.xlsx",
-#             district_code="MSMD",
-#             district_name="mountain_sky",
-#             district_label="Mountain Sky",
+#             excel_path="../datasets/WMD_CL_250604.xlsx",
+#             district_code="WMD",
+#             district_name="winsome",
+#             district_label="Winsome",
 #         )
 #         print("✅ Dataset imported successfully!")
 #     except Exception as e:
@@ -321,14 +322,20 @@ if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
 
     # run join on district and address
-    # with app.app_context():
-    #     # New object-oriented approach (recommended)
-    #     collector = ViolationDataCollector("highlands_mead")
-    #     consolidated_data = collector.collect_violation_data()
-    #     print(
-    #         f"Collected {len(consolidated_data)} violation records for PDF generation."
-    #     )
-    #     # print(pdf_data)
-    #     PDFGenerator.generate_consolidated_pdfs(consolidated_data)
-
+    with app.app_context():
+        # New object-oriented approach (recommended)
+        collector = ViolationDataCollector("winsome")
+        consolidated_data = collector.collect_violation_data()
+        violations = [v for group in consolidated_data for v in group]
+        print(
+            f"Collected {len(consolidated_data)} violation records for PDF generation."
+        )
+        PDFGenerator.generate_consolidated_pdfs(consolidated_data)
+    # board report
+    # generate_board_report(
+    #     output_path="board_report.pdf",
+    #     district_name="Highlands Mead",
+    #     violations=violations,
+    #     date=datetime.now().strftime("%B %d, %Y"),
+    # )
     app.run(debug=debug_mode, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

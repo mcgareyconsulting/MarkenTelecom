@@ -42,7 +42,6 @@ class AddressNormalizer:
             if addr.endswith(long_form):
                 addr = addr[: -len(long_form)] + short_form
             addr = addr.replace(long_form + " ", short_form + " ")
-
         return addr
 
 
@@ -71,11 +70,7 @@ class ViolationDataCollector:
     def _get_violation_reports(self):
         """Get all violation reports for the district updated today."""
         today = date.today()
-        return (
-            ViolationReport.query.filter_by(district=self.district_name)
-            .filter(db.func.date(ViolationReport.updated_at) == today)
-            .all()
-        )
+        return ViolationReport.query.filter_by(district=self.district_name).all()
 
     def _get_district_regulations(self, district_name, violation_type):
         """Fetch district regulations for a specific violation type."""
@@ -86,11 +81,15 @@ class ViolationDataCollector:
                 "title": "Other Violation",
                 "description": "No specific regulation available for this violation type.",
             }
-        return {
-            "violation_name": violation_type,
-            "title": violations[district_name][violation_type]["title"],
-            "description": violations[district_name][violation_type]["description"],
-        }
+        try:
+            return {
+                "violation_name": violation_type,
+                "title": violations[district_name][violation_type]["title"],
+                "description": violations[district_name][violation_type]["description"],
+            }
+        except KeyError:
+            # If the violation type or district is not found, skip this violation
+            return None
 
     def _create_pdf_data_package(self, account, report, violation):
         """Create a complete data package for PDF generation."""
@@ -170,8 +169,13 @@ class ViolationDataCollector:
                 # Process each violation in the report
                 for violation in report.violations:
                     # Skip if violation type is not in the district regulations
-                    if violation.violation_type == "other":
-                        print(f"Skipping 'other' violation for: {report.address_line1}")
+                    if (
+                        violation.violation_type == "other"
+                        or violation.violation_type == "bball_hoop"
+                    ):
+                        print(
+                            f"Skipping 'other' / 'bball_hoop' violation for: {report.address_line1}"
+                        )
                         continue
 
                     # Skip if we've already processed this violation ID
