@@ -151,6 +151,8 @@ def get_district_accounts(district_code: str):
             "highlands_mead": ["HIGHLANDS_MEAD", "HMMD"],
             "muegge_farms": ["MUEGGE_FARMS", "MFMD"],
             "mountain_sky": ["MOUNTAIN_SKY", "MSMD"],
+            "littleton_village": ["LITTLETON_VILLAGE", "LVMD"],
+            "red_barn": ["RED_BARN", "RBMD"],
         }
 
         # Get the possible district codes/names for this district
