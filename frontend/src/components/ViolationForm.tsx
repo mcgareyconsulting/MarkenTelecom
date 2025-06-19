@@ -72,6 +72,10 @@ export function ViolationForm() {
       label: 'Ventana Metro District',
     },
     {
+      value: 'red_barn',
+      label: 'Red Barn Metro District',
+    },
+    {
       value: 'winsome',
       label: 'Winsome Metro District',
     },

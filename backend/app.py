@@ -90,17 +90,17 @@ def create_app():
 app = create_app()
 
 # load dataset into db
-# with app.app_context():
-#     try:
-#         import_excel_to_db(
-#             excel_path="../datasets/WMD_CL_250604.xlsx",
-#             district_code="WMD",
-#             district_name="winsome",
-#             district_label="Winsome",
-#         )
-#         print("✅ Dataset imported successfully!")
-#     except Exception as e:
-#         print(f"❌ Error importing dataset: {e}")
+with app.app_context():
+    try:
+        import_excel_to_db(
+            excel_path="../datasets/RBMD_CL_250619.xlsx",
+            district_code="RBMD",
+            district_name="red_barn",
+            district_label="Red Barn",
+        )
+        print("✅ Dataset imported successfully!")
+    except Exception as e:
+        print(f"❌ Error importing dataset: {e}")
 
 
 # Utility functions
@@ -444,7 +444,7 @@ if __name__ == "__main__":
     # run join on district and address
     # with app.app_context():
     #     # New object-oriented approach (recommended)
-    #     collector = ViolationDataCollector("winsome")
+    #     collector = ViolationDataCollector("mountain_sky")
     #     consolidated_data = collector.collect_violation_data()
     #     violations = [v for group in consolidated_data for v in group]
     #     print(

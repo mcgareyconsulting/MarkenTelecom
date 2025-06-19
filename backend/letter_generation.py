@@ -22,7 +22,7 @@ class AddressNormalizer:
         " parkway": " pkwy",
         " circle": " cir",
         " terrace": " ter",
-        " way": " way",
+        " way": " wy",  # sometimes way or sometimes wy
     }
 
     @classmethod
@@ -36,13 +36,16 @@ class AddressNormalizer:
         addr = re.sub(r"[.,]", "", addr)
         # Collapse multiple spaces
         addr = re.sub(r"\s+", " ", addr)
+        # Remove trailing whitespace (again, in case replacements add it)
+        addr = addr.rstrip()
 
         # Replace street suffixes
         for long_form, short_form in cls.SUFFIX_MAP.items():
             if addr.endswith(long_form):
                 addr = addr[: -len(long_form)] + short_form
             addr = addr.replace(long_form + " ", short_form + " ")
-        return addr
+        # Final strip to ensure no trailing whitespace
+        return addr.strip()
 
 
 class ViolationDataCollector:
@@ -69,8 +72,14 @@ class ViolationDataCollector:
 
     def _get_violation_reports(self):
         """Get all violation reports for the district updated today."""
-        today = date.today()
-        return ViolationReport.query.filter_by(district=self.district_name).all()
+        target_date = date(2025, 6, 10)
+        start_dt = datetime.combine(target_date, datetime.min.time())
+        end_dt = datetime.combine(target_date, datetime.max.time())
+        return ViolationReport.query.filter(
+            ViolationReport.district == self.district_name,
+            ViolationReport.updated_at >= start_dt,
+            ViolationReport.updated_at <= end_dt,
+        ).all()
 
     def _get_district_regulations(self, district_name, violation_type):
         """Fetch district regulations for a specific violation type."""

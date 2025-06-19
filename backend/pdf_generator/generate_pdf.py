@@ -269,7 +269,9 @@ class ViolationNoticePDF:
         content.append(Paragraph("Courtesy Notice", self.styles["NoticeTitle"]))
 
         # Format the date to ensure it's a string
-        formatted_date = self._format_date(data["violation_date"])
+        formatted_date = self._format_date(
+            data["report_updated_at"]
+        )  ## adjusting date format for now
         content.append(Paragraph(formatted_date, self.styles["Date"]))
 
         # Recipient information

@@ -377,11 +377,22 @@ def import_excel_to_db(
 def clean_value(val):
     """
     Pandas to SQLAlchemy conversion helper function.
+    Converts NaN, NaT, NaTType, and empty strings to None.
     """
     import math
+    import pandas as pd
+    import numpy as np
 
     if val is None:
         return None
     if isinstance(val, float) and math.isnan(val):
+        return None
+    if isinstance(val, str) and val.strip() == "":
+        return None
+    if isinstance(val, pd.Timestamp) and pd.isna(val):
+        return None
+    if isinstance(val, type(pd.NaT)):
+        return None
+    if isinstance(val, np.generic) and np.isnan(val):
         return None
     return val
