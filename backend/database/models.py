@@ -349,6 +349,8 @@ def import_excel_to_db(
     # Import accounts
     added = 0
     for idx, row in df.iterrows():
+        if clean_value(row["Address Type"]) != "Owner":
+            continue  # Only import records where Address Type is 'Owner'
         account = Account(
             account_number=clean_value(row["Account Number"]),
             account_name=clean_value(row["Account Name"]),

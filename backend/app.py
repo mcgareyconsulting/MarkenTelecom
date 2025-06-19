@@ -90,17 +90,17 @@ def create_app():
 app = create_app()
 
 # load dataset into db
-with app.app_context():
-    try:
-        import_excel_to_db(
-            excel_path="../datasets/RBMD_CL_250619.xlsx",
-            district_code="RBMD",
-            district_name="red_barn",
-            district_label="Red Barn",
-        )
-        print("✅ Dataset imported successfully!")
-    except Exception as e:
-        print(f"❌ Error importing dataset: {e}")
+# with app.app_context():
+#     try:
+#         import_excel_to_db(
+#             excel_path="../datasets/LVMD_CL_250619.xlsx",
+#             district_code="LVMD",
+#             district_name="littleton_village",
+#             district_label="Littleton Village",
+#         )
+#         print("✅ Dataset imported successfully!")
+#     except Exception as e:
+#         print(f"❌ Error importing dataset: {e}")
 
 
 # Utility functions
