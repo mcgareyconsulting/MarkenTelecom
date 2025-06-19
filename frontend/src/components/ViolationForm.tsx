@@ -78,7 +78,7 @@ export function ViolationForm() {
     {
       value: 'littleton_village',
       label: 'Littleton Village Metro District',
-    }
+    },
     {
       value: 'winsome',
       label: 'Winsome Metro District',
