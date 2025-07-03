@@ -4,6 +4,7 @@
 images/
 backend/pdf_generator/output
 backups/*
+Random Shit/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
