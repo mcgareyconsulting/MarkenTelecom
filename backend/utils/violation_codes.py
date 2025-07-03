@@ -196,4 +196,68 @@ BACK-YARD INSTALLATION/PERMANENT HOOPS: Approval is required prior to installati
             "description": """No refuse, garbage, trash, lumber, grass, shrubs or tree clippings, plant waste, metal, bulk materials, scrap or debris of any kind shall be kept, stored, or allowed to accumulate except inside the residence on any Lot nor shall such items be deposited on a street, unless placed in a suitable, tightly-covered container that is suitably located solely for the purpose of garbage pickup. Further, no trash or materials shall be permitted to accumulate in such a manner as to be visible from any Lot. All equipment for the storage or disposal of such materials shall be kept in a clean and sanitary condition. No garbage or trash cans or receptacles shall be maintained in an exposed or unsightly manner.""",
         },
     },
+    "waters_edge": {
+        "weeds": {
+            "title": "6.2 Landscaping Responsibilities",
+            "code_number": "6.2",
+            "violation_name": "Landscaping Responsibilities",
+            "description": """(b) Landscaping plans and other required documents shall be professionally done, shall be in accordance with the Guidelines and applicable governmental landscape standards, if any, and shall be submitted to the DRC for review, and the approval of the same shall be obtained prior to the installation of landscaping, except where installed by the Declarant or Builder. Each Owner shall maintain all landscaping on such Owner's Lot in a neat and attractive condition, including periodic and horticulturally correct pruning, removal of weeds, and replacement of landscaping. If any Owner fails to comply with this Subsection (b), the Metropolitan District may, at its direction, enter upon such Lot and maintain landscaping for which the Owner of such Lot shall be obligated to pay the cost of such maintenance and the Metropolitan District shall have a lien upon the Lot to secure such cost.""",
+        },
+        "rv": {
+            "title": "8.7 Vehicular Parking, Storage and Repairs",
+            "code_number": "8.7",
+            "violation_name": "Vehicular Parking, Storage and Repairs",
+            "description": """(a) No house trailer, camping trailer, boat trailer, hauling trailer, boat, or accessories thereto, truck (rated larger than one [1] ton), commercial vehicles, self-contained motorized recreational vehicle, or other type of recreational vehicle or equipment, may be parked or stored in the Community, unless such parking or storage is within a garage or is suitably screened from view in accordance with the Rules and Regulations, except that (i) any such vehicle may be otherwise parked as a temporary expedient for loading, delivery or emergency and, (ii) with regard to trucks and commercial vehicles (in each case, rated one (1) ton or under) only, parked wholly within driveways on Lots. This restriction, however, shall not restrict (y) trucks or other commercial vehicles which are necessary for construction or for the maintenance of any portion of the Community or any Improvements located thereon or (z) fire and emergency service vehicles.""",
+        },
+        "grass": {
+            "title": "6.2 Landscaping Responsibilities",
+            "code_number": "6.2",
+            "violation_name": "Landscaping Responsibilities",
+            "description": """(b) Landscaping plans and other required documents shall be professionally done, shall be in accordance with the Guidelines and applicable governmental landscape standards, if any, and shall be submitted to the DRC for review, and the approval of the same shall be obtained prior to the installation of landscaping, except where installed by the Declarant or Builder. Each Owner shall maintain all landscaping on such Owner's Lot in a neat and attractive condition, including periodic and horticulturally correct pruning, removal of weeds, and replacement of landscaping. If any Owner fails to comply with this Subsection (b), the Metropolitan District may, at its direction, enter upon such Lot and maintain landscaping for which the Owner of such Lot shall be obligated to pay the cost of such maintenance and the Metropolitan District shall have a lien upon the Lot to secure such cost.""",
+        },
+        "trash": {
+            "title": "8.13 Restrictions on Trash ANad Material; Trash Collection",
+            "code_number": "8.13",
+            "violation_name": "Restrictions on Trash ANad Material; Trash Collection",
+            "description": """No refuse, garbage, trash, lumber, grass, shrubs or tree clippings, plant waste, metal, bulk materials, scrap or debris of any kind shall be kept, stored, or allowed to accumulate on any Lot, unless placed in a suitable, tightly-covered container that is suitably located solely for the purpose of garbage, trash or recycling pickup and fully screened from view. No garbage or trash cans or receptacles shall be maintained in an exposed or unsightly manner.""",
+        },
+        "debris": {
+            "title": "8.8 Unsightly Articles",
+            "code_number": "8.8",
+            "violation_name": "Unsightly Articles",
+            "description": """No unsightly article shall be permitted to remain on any Lot or any other portion of the Community if it is visible from adjoining property or public or private thoroughfares. Without limiting the generality of the foregoing, service areas, storage areas, compost piles shall be appropriately screened from view. No lumber, grass, plant waste, shrub or tree clippings, metals, bulk materials or scrap or refuse or trash shall be kept stored or allowed to accumulate on any property except within an enclosed structure or appropriately screened from view.""",
+        },
+    },
+    "littleton_village": {
+        "weeds": {
+            "title": "Section 3.11. Landscaping.",
+            "code_number": "3.11",
+            "violation_name": "Landscaping",
+            "description": """Within the time frames as hereinafter provided, the Owner of each Unit (other than Developer or a Builder) shall install landscaping over all portions of the Unit which is not covered by a building or Improvement, as well as on the tree lawn areas adjacent to such Unit in accordance with the Governing Documents and the requirements of the City. The Owner of each Unit (other than Developer) shall install landscaping on such Unit, and on adjacent tree lawn areas, on the earlier of the date required by the City or within one hundred eighty (180) days after the later to occur of acquisition of such Unit by such Owner or issuance by the City of a certificate of occupancy (or its equivalent) on the building, residence, condominium unit or apartment unit constructed on such Unit, if said acquisition or issuance, whichever occurs later, does not occur between April 1 and July 31. If such acquisition or issuance, whichever occurs later, does not occur between April 1 and July 31, then such landscaping shall be installed by such Owner by the following June 30. Notwithstanding the foregoing, Builders shall not be required to complete landscaping in the backyards of single family residences within any Unit as long as such Builders otherwise comply with the requirements of the City and any other governmental or quasi-governmental entity with jurisdiction over the Unit and the Design Guidelines with respect to landscaping the Units. Landscaping plans must be in compliance with the requirements of the City and any other governmental or quasi-governmental entity with jurisdiction over the Unit, and submitted to the ACC for review and approval (which may be conditions and/or requirements), and such approval shall be obtained in accordance with Article 2 of these Covenants prior to the installation of such landscaping. Each Owner shall maintain all landscaping on such Owner's Unit in a neat and attractive condition, including periodic and horticulturally correct pruning, removal of weeds and debris, and replacement of landscaping.""",
+        },
+        "rv": {
+            "title": "Section 3.4. Vehicular Parking, Storage and Repairs.",
+            "code_number": "3.4",
+            "violation_name": "Vehicular Parking, Storage and Repairs.",
+            "description": """3.42 Commercial vehicles, vehicles with commercial writing on their exteriors, vehicles primarily used or designed for commercial purposes, tractors, mobile homes, recreational vehicles, trailers (either with or without wheels), campers, camper trailers, boats and other watercraft, recreational vehicles, golf carts and boat trailers, shall be parked only in enclosed garages or specific areas, if any, which may be designated by the ACC. This restriction shall not restrict trucks or commercial vehicles which are necessary for construction or for the maintenance of any portion of the Property, or any Improvements located thereon, nor shall such restriction prohibit vehicles that may be otherwise parked as a temporarily expedient for loading, delivery or emergency. Stored vehicles and vehicles which are inoperable or do not have current operating licenses shall not be permitted in the Property except within enclosed garages. For purposes of this Section 3.4.2, a vehicle shall be considered "stored" if, for example, it is up on blocks or covered with a tarpaulin and remains on blocks or so covered for seventy-two (72) consecutive hours without the prior approval (which may be with conditions and/or requirements) of the ACC.""",
+        },
+        "grass": {
+            "title": "Section 3.11. Landscaping.",
+            "code_number": "3.11",
+            "violation_name": "Landscaping",
+            "description": """Within the time frames as hereinafter provided, the Owner of each Unit (other than Developer or a Builder) shall install landscaping over all portions of the Unit which is not covered by a building or Improvement, as well as on the tree lawn areas adjacent to such Unit in accordance with the Governing Documents and the requirements of the City. The Owner of each Unit (other than Developer) shall install landscaping on such Unit, and on adjacent tree lawn areas, on the earlier of the date required by the City or within one hundred eighty (180) days after the later to occur of acquisition of such Unit by such Owner or issuance by the City of a certificate of occupancy (or its equivalent) on the building, residence, condominium unit or apartment unit constructed on such Unit, if said acquisition or issuance, whichever occurs later, does not occur between April 1 and July 31. If such acquisition or issuance, whichever occurs later, does not occur between April 1 and July 31, then such landscaping shall be installed by such Owner by the following June 30. Notwithstanding the foregoing, Builders shall not be required to complete landscaping in the backyards of single family residences within any Unit as long as such Builders otherwise comply with the requirements of the City and any other governmental or quasi-governmental entity with jurisdiction over the Unit and the Design Guidelines with respect to landscaping the Units. Landscaping plans must be in compliance with the requirements of the City and any other governmental or quasi-governmental entity with jurisdiction over the Unit, and submitted to the ACC for review and approval (which may be conditions and/or requirements), and such approval shall be obtained in accordance with Article 2 of these Covenants prior to the installation of such landscaping. Each Owner shall maintain all landscaping on such Owner's Unit in a neat and attractive condition, including periodic and horticulturally correct pruning, removal of weeds and debris, and replacement of landscaping.""",
+        },
+        "trash": {
+            "title": "Section 3.8. Restrictions on Trash and Materials.",
+            "code_number": "3.8",
+            "violation_name": "Restrictions on Trash and Materials.",
+            "description": """No refuse, garbage, trash, lumber, grass, shrubs or tree clippings, plant waste, metal, bulk materials, scrap or debris of any kind shall be kept, stored, or allowed to accumulate except inside the residence of any Unit nor shall such items be deposited on a street, unless placed in a suitable, tightly-covered container that is suitably located solely for the purpose of garbage pickup. Further, no trash or materials shall be permitted to accumulate in such a manner as to be visible from any Unit. All equipment for the storage or disposal of such materials shall be kept in a clean and sanitary condition. No garbage or trash cans or receptacles shall be maintained in an exposed or unsightly manner.""",
+        },
+        "debris": {
+            "title": "Section 3.8. Restrictions on Trash and Materials.",
+            "code_number": "3.8",
+            "violation_name": "Restrictions on Trash and Materials.",
+            "description": """No refuse, garbage, trash, lumber, grass, shrubs or tree clippings, plant waste, metal, bulk materials, scrap or debris of any kind shall be kept, stored, or allowed to accumulate except inside the residence of any Unit nor shall such items be deposited on a street, unless placed in a suitable, tightly-covered container that is suitably located solely for the purpose of garbage pickup. Further, no trash or materials shall be permitted to accumulate in such a manner as to be visible from any Unit. All equipment for the storage or disposal of such materials shall be kept in a clean and sanitary condition. No garbage or trash cans or receptacles shall be maintained in an exposed or unsightly manner.""",
+        },
+    },
 }
