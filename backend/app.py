@@ -90,17 +90,17 @@ def create_app():
 app = create_app()
 
 # load dataset into db
-# with app.app_context():
-#     try:
-#         import_excel_to_db(
-#             excel_path="../datasets/LVMD_CL_250619.xlsx",
-#             district_code="LVMD",
-#             district_name="littleton_village",
-#             district_label="Littleton Village",
-#         )
-#         print("✅ Dataset imported successfully!")
-#     except Exception as e:
-#         print(f"❌ Error importing dataset: {e}")
+with app.app_context():
+    try:
+        import_excel_to_db(
+            excel_path="../datasets/SRMD_CL_250516.xlsx",
+            district_code="SRMD",
+            district_name="saddler_ridge",
+            district_label="Saddler Ridge",
+        )
+        print("✅ Dataset imported successfully!")
+    except Exception as e:
+        print(f"❌ Error importing dataset: {e}")
 
 
 # Utility functions
@@ -444,15 +444,15 @@ if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
 
     # run join on district and address
-    with app.app_context():
-        # New object-oriented approach (recommended)
-        collector = ViolationDataCollector("littleton_village")
-        consolidated_data = collector.collect_violation_data()
-        violations = [v for group in consolidated_data for v in group]
-        print(
-            f"Collected {len(consolidated_data)} violation records for PDF generation."
-        )
-        PDFGenerator.generate_consolidated_pdfs(consolidated_data)
+    # with app.app_context():
+    #     # New object-oriented approach (recommended)
+    #     collector = ViolationDataCollector("littleton_village")
+    #     consolidated_data = collector.collect_violation_data()
+    #     violations = [v for group in consolidated_data for v in group]
+    #     print(
+    #         f"Collected {len(consolidated_data)} violation records for PDF generation."
+    #     )
+    #     PDFGenerator.generate_consolidated_pdfs(consolidated_data)
     # board report
     # generate_board_report(
     #     output_path="board_report.pdf",
