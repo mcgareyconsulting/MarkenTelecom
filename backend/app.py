@@ -447,7 +447,7 @@ if __name__ == "__main__":
     # run join on district and address
     # with app.app_context():
     #     # New object-oriented approach (recommended)
-    #     collector = ViolationDataCollector("littleton_village")
+    #     collector = ViolationDataCollector("saddler_ridge")
     #     consolidated_data = collector.collect_violation_data()
     #     violations = [v for group in consolidated_data for v in group]
     #     print(

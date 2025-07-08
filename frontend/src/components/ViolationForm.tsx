@@ -352,14 +352,14 @@ export function ViolationForm() {
       setSuccessMessage('Report submitted successfully! Report ID: ' + result.report_id);
 
       // Reset form
-      setAddress({
+      setAddress(prev => ({
         line1: '',
         line2: '',
         city: '',
         state: '',
         zip: '',
-        district: '',
-      });
+        district: prev.district, // Preserve the current district
+      }));
       setViolations([{
         id: 1,
         type: '',

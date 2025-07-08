@@ -260,4 +260,36 @@ BACK-YARD INSTALLATION/PERMANENT HOOPS: Approval is required prior to installati
             "description": """No refuse, garbage, trash, lumber, grass, shrubs or tree clippings, plant waste, metal, bulk materials, scrap or debris of any kind shall be kept, stored, or allowed to accumulate except inside the residence of any Unit nor shall such items be deposited on a street, unless placed in a suitable, tightly-covered container that is suitably located solely for the purpose of garbage pickup. Further, no trash or materials shall be permitted to accumulate in such a manner as to be visible from any Unit. All equipment for the storage or disposal of such materials shall be kept in a clean and sanitary condition. No garbage or trash cans or receptacles shall be maintained in an exposed or unsightly manner.""",
         },
     },
+    "saddler_ridge": {
+        "weeds": {
+            "title": "3.42.2 Landscape Maintenance",
+            "code_number": "3.42.2",
+            "violation_name": "Landscape Maintenance",
+            "description": """Each Owner shall maintain all landscaping on such Owner's lot in a neat and attractive condition, including mowing, periodic and horticulturally correct pruning, removal of weeds and debris, and replacement of landscaping. This applies to the front, back, and side yards as well as the Street/Tree lawn area.""",
+        },
+        "rv": {
+            "title": "3.47 Motor Vehicles/Recreational Vehicles",
+            "code_number": "3.47",
+            "violation_name": "Motor Vehicles/Recreational Vehicles",
+            "description": """All types of “Recreational Vehicles,” including but not limited to trucks, trailers, mobile homes, detached camper units, utility and boat trailers, snowmobiles, race cars, watercraft or house trailers, are prohibited from parking anywhere within the Property unless they fit entirely within an enclosed garage or Accessory Building, except for the "temporary expedient of unloading, delivery or emergency." Parking three (3) overnights or seventy two (72) hours during a seven (7) day period for loading and unloading is allowed. Parking of a recreational vehicle for a period of time in excess of seventy two (72) hours in a seven (7) day period is prohibited. Periodic movement of the vehicle for purposes of circumventing this standard shall not qualify the vehicle for exception from this standard. Any “Recreational Vehicle,” including but not limited to trucks, trailers, mobile homes, detached camper units, utility and boat trailers, snowmobiles, race cars, watercraft or house trailers shall not be parked, kept, stored or maintained on or adjacent to any open space area within the Property, except while temporarily engaged in loading or unloading of trucks or RVs not to exceed more than one (1) consecutive day. Vehicles in violation hereof may be subject to ticketing and/or towing at Owner's expense, as provided herein or by applicable law. The purpose of the seventy two (72) hours is to load and unload, not to provide storage/parking for the unit. Recreational Vehicles must be stored/parked in the garage, Accessory Building, or off site. Vehicles shall not be parked on landscaped (i.e., rock, sod, mulch, plants, etc.) areas. Inoperable, unused or unregistered vehicles (legally and/or mechanically) must be kept in a garage or Accessory Building. "Inoperable, unused or unregistered" shall also mean any automobile, truck, motorcycle, motorbike or recreational vehicle which has not been driven under its own propulsion or has not been moved outside of the Property for a period of two (2) weeks or longer. The foregoing restriction shall not include otherwise permitted vehicles parked by Owners while on vacation or during a period of illness.""",
+        },
+        "grass": {
+            "title": "3.42.2 Landscape Maintenance",
+            "code_number": "3.42.2",
+            "violation_name": "Landscape Maintenance",
+            "description": """Each Owner shall maintain all landscaping on such Owner's lot in a neat and attractive condition, including mowing, periodic and horticulturally correct pruning, removal of weeds and debris, and replacement of landscaping. This applies to the front, back, and side yards as well as the Street/Tree lawn area.""",
+        },
+        "trash": {
+            "title": "3.85 Trash Containers, Enclosures, and Pick Up",
+            "code_number": "3.85",
+            "violation_name": "Trash Containers, Enclosures, and Pick Up",
+            "description": """Approval is required for any trash or garbage enclosure. Refuse, garbage, trash, lumber, grass, shrub or tree clippings, plant waste, compost, metal, bulk materials, scrap, or debris of any kind may not be kept, stored or allowed to accumulate on any lot except in sanitary containers or approved enclosures. No garbage or trash cans or receptacles shall be maintained in an exposed or unsightly manner. All garbage or trash cans or receptacles shall be stored out of site (except that a container for such materials may be placed outside at such times as may be necessary to permit garbage or trash pickup.) Trash containers may be placed on the street for pickup after 5:00 p.m. on the evening prior to the day that such trash is to be picked up. Trash containers must be properly stored the evening of pickup.""",
+        },
+        "debris": {
+            "title": "3.85 Trash Containers, Enclosures, and Pick Up",
+            "code_number": "3.85",
+            "violation_name": "Trash Containers, Enclosures, and Pick Up",
+            "description": """Approval is required for any trash or garbage enclosure. Refuse, garbage, trash, lumber, grass, shrub or tree clippings, plant waste, compost, metal, bulk materials, scrap, or debris of any kind may not be kept, stored or allowed to accumulate on any lot except in sanitary containers or approved enclosures. No garbage or trash cans or receptacles shall be maintained in an exposed or unsightly manner. All garbage or trash cans or receptacles shall be stored out of site (except that a container for such materials may be placed outside at such times as may be necessary to permit garbage or trash pickup.) Trash containers may be placed on the street for pickup after 5:00 p.m. on the evening prior to the day that such trash is to be picked up. Trash containers must be properly stored the evening of pickup.""",
+        },
+    },
 }
