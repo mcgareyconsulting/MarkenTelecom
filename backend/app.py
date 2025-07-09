@@ -445,15 +445,15 @@ if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
 
     # run join on district and address
-    # with app.app_context():
-    #     # New object-oriented approach (recommended)
-    #     collector = ViolationDataCollector("saddler_ridge")
-    #     consolidated_data = collector.collect_violation_data()
-    #     violations = [v for group in consolidated_data for v in group]
-    #     print(
-    #         f"Collected {len(consolidated_data)} violation records for PDF generation."
-    #     )
-    #     PDFGenerator.generate_consolidated_pdfs(consolidated_data)
+    with app.app_context():
+        # New object-oriented approach (recommended)
+        collector = ViolationDataCollector("muegge_farms")
+        consolidated_data = collector.collect_violation_data()
+        violations = [v for group in consolidated_data for v in group]
+        print(
+            f"Collected {len(consolidated_data)} violation records for PDF generation."
+        )
+        PDFGenerator.generate_consolidated_pdfs(consolidated_data)
     # board report
     # generate_board_report(
     #     output_path="board_report.pdf",
