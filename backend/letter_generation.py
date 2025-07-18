@@ -72,7 +72,7 @@ class ViolationDataCollector:
 
     def _get_violation_reports(self):
         """Get all violation reports for the district updated today."""
-        dates = [date(2025, 7, 8), date(2025, 7, 9)]
+        dates = [date(2025, 7, 11), date(2025, 7, 11)]
         filters = []
         for target_date in dates:
             start_dt = datetime.combine(target_date, datetime.min.time())

@@ -151,25 +151,31 @@ BACK-YARD INSTALLATION/PERMANENT HOOPS: Approval is required prior to installati
             "violation_name": "Restrictions on Trash and Materials",
             "description": """No refuse, garbage, trash, lumber, grass, shrubs or tree clippings, plant waste, metal, bulk materials, scrap or debris of any kind shall be kept, stored, or allowed to accumulate, except inside a suitable, tightly-covered container inside the home (including garages and overhangs along the sides or rear of the home), on any Unit, nor shall any such items be deposited on a street or sidewalk, unless placed in a suitable, tightly-covered container that is suitably located solely for the purpose of garbage pickup. Further, no trash or materials shall be permitted to accumulate in such a manner as to be visible from any other portion of the Community. No trash, garbage or other refuse shall be burned in outside containers, barbecue pits or the like. All equipment for the storage or disposal of such materials shall be kept in a clean and sanitary condition. No garbage cans, trash cans or other trash receptacles shall be maintained in an exposed or unsightly manner.""",
         },
-        "erosion": {
-            "title": "Design Guidelines: Landscape",
-            "code_number": "",
-            "violation_name": "Erosion",
+        "erosion control": {
+            "title": "Design Guidelines: Landscape - 2",
+            "code_number": "2",
+            "violation_name": "Landscape",
             "description": """Landscaping, erosion and weed control: Lot Owners are encouraged to nurture trees that are native and pre-existing to the lot, as well as the planting of native trees to the area and/or can thrive in this climate. All soils disturbed during the building process will be regraded to natural grade and require amended topsoil and seeded with a native grass mix. Weed control is the sole responsibility of each individual lot owner and imperative to the site (see below for Noxious Weed Management Plan). Importation of fill dirt and landscaping material from other locations is strictly prohibited unless it is certified as weed free. All lot owners must maintain drainage easements.""",
+        },
+        "landscape/construction approval": {
+            "title": "Section 4.2. Required Review and Approval; Reimbursement for Expenses.",
+            "code_number": "4.2.",
+            "violation_name": "Required Review and Approval; Reimbursement for Expenses.",
+            "description": """4.2.1 Except as provided in Sections 4.10 and 4.13 of this Declaration, no Improvements shall be constructed, erected, placed, planted, applied or installed upon any Unit, unless complete plans and specifications therefor (said plans and specifications to show exterior design, height, materials, color, and location of the Improvements, plotted horizontally and vertically, location and size of driveways, location, size, and type of landscaping, fencing, walls, retaining walls, windbreaks and grading plan, as well as such other materials and information as may be required by the Community Council), shall have been first submitted to and approved in writing by the Community Council. Each Owner acknowledges that there may be certain landscaping design requirements imposed by the Board (or other governmental authority) that each Owner may be required to observe at such Owner's sole cost.""",
+        },
+        "address signage": {
+            "title": "Design Guidelines: Lot - 2",
+            "code_number": "2",
+            "violation_name": "Lot",
+            "description": """Address Signage (See Exhibit A): Each lot (lot owner) will be required to purchase and install the address sign, per design, found in Exhibit A. Each Address sign will be required to be installed within 10’ offset from the front lotline on the right-hand side (facing the driveway) of each lot. In the instance of a flag lot, one Address sign will be installed on each side of the driveway within the 10’ requirement.""",
         },
     },
     "mountain_sky": {
         "weeds": {
-            "title": "Section 3.11 Lots to be Maintained.",
-            "code_number": "3.11",
-            "violation_name": "Lots to be Maintained",
-            "description": """Subject to Section 3.4 hereof, each Lot shall at all times be kept in a clean and sightly condition by the Owner(s) thereof.""",
-        },
-        "motorized_vehicles": {
-            "title": "VV. MOTORIZED VEHICLES",
-            "code_number": "VV",
-            "violation_name": "Motorized Vehicles",
-            "description": """Motorized vehicles include, but are not limited to, snowmobiles, golf carts, motorcycles, minibikes, go-carts, mopeds, and delivery trucks, but exclude lawn cutting, snow removal, or maintenance equipment. Motorized vehicles shall not be parked so as to be visible from any of the Homes or the street. Motorized vehicles are not to be driven on greenbelts or Common Elements.""",
+            "title": "Section 3.13 Completion of Landscaping",
+            "code_number": "3.13",
+            "violation_name": "Completion of Landscaping",
+            "description": """Within the time frames as hereinafter provided, the Owner (other than the Declarant, or a builder with the express written approval of the Declarant) of each Lot shall install landscaping on all of the Lot, and shall thereafter maintain such landscaping in a neat and attractive condition, including periodic and horticulturally correct pruning, removal of weeds, and replacement of landscaping. The Owner of each Lot (other than Declarant, or builder with the express written approval of the Declarant) shall install landscaping on such Lot within one hundred eighty (180) days after acquisition of such Lot by such Owner if said acquisition occurs between April 1 and October 1; if said acquisition does not occur between such dates, then such landscaping shall be installed by such Owner by the following October 1. Landscaping plans and other required documents shall be in accordance with the Guidelines, and shall be submitted to the ACC for review and approval prior to the installation of landscaping, except where installed by the Declarant, the Developer, or a builder with the express written approval of the Declarant.""",
         },
         "rv": {
             "title": "UU. MOTOR HOME VEHICLES",
@@ -178,10 +184,10 @@ BACK-YARD INSTALLATION/PERMANENT HOOPS: Approval is required prior to installati
             "description": """Not permitted to be located or parked permanently within the Community, as set forth in Section 3.6 of the Declaration. These vehicles must be moved from the Community within seventy-two (72) hours unless approved in writing by the ACC. This seventy-two (72) hour period is allowed for loading or unloading before and after trips. Such vehicles may be stored only within garages. The District does not permit enclosed structures other than garages for this type of storage.""",
         },
         "grass": {
-            "title": "Section 3.11 Lots to be Maintained.",
-            "code_number": "3.11",
-            "violation_name": "Lots to be Maintained",
-            "description": """Subject to Section 3.4 hereof, each Lot shall at all times be kept in a clean and sightly condition by the Owner(s) thereof.""",
+            "title": "Section 3.13 Completion of Landscaping",
+            "code_number": "3.13",
+            "violation_name": "Completion of Landscaping",
+            "description": """Within the time frames as hereinafter provided, the Owner (other than the Declarant, or a builder with the express written approval of the Declarant) of each Lot shall install landscaping on all of the Lot, and shall thereafter maintain such landscaping in a neat and attractive condition, including periodic and horticulturally correct pruning, removal of weeds, and replacement of landscaping. The Owner of each Lot (other than Declarant, or builder with the express written approval of the Declarant) shall install landscaping on such Lot within one hundred eighty (180) days after acquisition of such Lot by such Owner if said acquisition occurs between April 1 and October 1; if said acquisition does not occur between such dates, then such landscaping shall be installed by such Owner by the following October 1. Landscaping plans and other required documents shall be in accordance with the Guidelines, and shall be submitted to the ACC for review and approval prior to the installation of landscaping, except where installed by the Declarant, the Developer, or a builder with the express written approval of the Declarant.""",
         },
         "trash": {
             "title": "Section 3.10 Restrictions on Trash and Materials.",

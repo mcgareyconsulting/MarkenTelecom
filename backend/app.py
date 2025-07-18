@@ -93,10 +93,10 @@ app = create_app()
 # with app.app_context():
 #     try:
 #         import_excel_to_db(
-#             excel_path="../datasets/SRMD_CL_250516.xlsx",
-#             district_code="SRMD",
-#             district_name="saddler_ridge",
-#             district_label="Saddler Ridge",
+#             excel_path="../datasets/WMD_CL_250604.xlsx",
+#             district_code="WMD",
+#             district_name="winsome",
+#             district_label="Winsome",
 #         )
 #         print("✅ Dataset imported successfully!")
 #     except Exception as e:
@@ -447,7 +447,7 @@ if __name__ == "__main__":
     # run join on district and address
     with app.app_context():
         # New object-oriented approach (recommended)
-        collector = ViolationDataCollector("muegge_farms")
+        collector = ViolationDataCollector("winsome")
         consolidated_data = collector.collect_violation_data()
         violations = [v for group in consolidated_data for v in group]
         print(
