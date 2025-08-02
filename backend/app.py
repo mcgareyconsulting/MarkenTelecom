@@ -93,10 +93,10 @@ app = create_app()
 # with app.app_context():
 #     try:
 #         import_excel_to_db(
-#             excel_path="../datasets/WMD_CL_250604.xlsx",
-#             district_code="WMD",
-#             district_name="winsome",
-#             district_label="Winsome",
+#             excel_path="../datasets/SRMD_CL_250516.xlsx",
+#             district_code="SRMD",
+#             district_name="saddler_ridge",
+#             district_label="Saddler Ridge",
 #         )
 #         print("✅ Dataset imported successfully!")
 #     except Exception as e:

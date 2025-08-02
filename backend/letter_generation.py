@@ -19,6 +19,7 @@ class AddressNormalizer:
         " court": " ct",
         " place": " pl",
         " trail": " trl",
+        " trail": " tr",
         " parkway": " pkwy",
         " circle": " cir",
         " terrace": " ter",
@@ -72,14 +73,14 @@ class ViolationDataCollector:
 
     def _get_violation_reports(self):
         """Get all violation reports for the district updated today."""
-        dates = [date(2025, 7, 11), date(2025, 7, 11)]
+        dates = [date(2025, 7, 31), date(2025, 7, 31)]
         filters = []
         for target_date in dates:
             start_dt = datetime.combine(target_date, datetime.min.time())
             end_dt = datetime.combine(target_date, datetime.max.time())
             filters.append(
-                (ViolationReport.updated_at >= start_dt)
-                & (ViolationReport.updated_at <= end_dt)
+                (ViolationReport.created_at >= start_dt)
+                & (ViolationReport.created_at <= end_dt)
             )
         return ViolationReport.query.filter(
             ViolationReport.district == self.district_name, (filters[0]) | (filters[1])
